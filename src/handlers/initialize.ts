@@ -40,8 +40,8 @@ UniswapV3Pool.Initialize.handler(async ({event, context}) => {
 
     context.Bundle.set(bundle);
 
-    updatePoolDayData(event.srcAddress, event.block.timestamp, context);
-    updatePoolHourData(event.srcAddress, event.block.timestamp, context);
+    updatePoolDayData(event.block.timestamp, pool, context);
+    updatePoolHourData(event.block.timestamp, pool, context);
 
     // update token prices
     let token0 = await context.Token.get(pool.token0_id);

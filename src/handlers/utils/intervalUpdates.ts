@@ -13,39 +13,41 @@ import {
   UniswapDayData,
 } from 'generated';
 
-/**
- * Tracks global aggregate data over daily windows
- * @param event
- */
-// export function updateUniswapDayData(event: ethereum.Event, factoryAddress: string): UniswapDayData {
-//   const uniswap = Factory.load(factoryAddress)!
-//   const timestamp = event.block.timestamp.toI32()
-//   const dayID = timestamp / 86400 // rounded
-//   const dayStartTimestamp = dayID * 86400
-//   let uniswapDayData = UniswapDayData.load(dayID.toString())
-//   if (uniswapDayData === null) {
-//     uniswapDayData = new UniswapDayData(dayID.toString())
-//     uniswapDayData.date = dayStartTimestamp
-//     uniswapDayData.volumeETH = ZERO_BD
-//     uniswapDayData.volumeUSD = ZERO_BD
-//     uniswapDayData.volumeUSDUntracked = ZERO_BD
-//     uniswapDayData.feesUSD = ZERO_BD
-//   }
-//   uniswapDayData.tvlUSD = uniswap.totalValueLockedUSD
-//   uniswapDayData.txCount = uniswap.txCount
-//   uniswapDayData.save()
-//   return uniswapDayData as UniswapDayData
-// }
+export async function updateUniswapDayData(
+  timestamp: number,
+  factory: Factory,
+  context: handlerContext
+): Promise<UniswapDayData> {
+  const dayID = Math.floor(timestamp / 86400); // rounded
+  const dayStartTimestamp = dayID * 86400;
+  let uniswapDayDataRO = await context.UniswapDayData.get(dayID.toString());
+  let uniswapDayData = uniswapDayDataRO ? {...uniswapDayDataRO} :
+                        {
+                          id: dayID.toString(),
+                          date: dayStartTimestamp,
+                          volumeETH: ZERO_BD,
+                          volumeUSD: ZERO_BD,
+                          volumeUSDUntracked: ZERO_BD,
+                          feesUSD: ZERO_BD,
+                          tvlUSD: ZERO_BD,
+                          txCount: ZERO_BI
+                        };
+
+  uniswapDayData.tvlUSD = factory.totalValueLockedUSD;
+  uniswapDayData.txCount = factory.txCount;
+
+  context.UniswapDayData.set(uniswapDayData);
+  return uniswapDayData as UniswapDayData;
+}
 
 export async function updatePoolDayData(
-  poolId: string, 
   timestamp: number, 
+  pool: Pool, 
   context: handlerContext
 ): Promise<PoolDayData | null> {
   const dayID = Math.floor(timestamp / 86400);
   const dayStartTimestamp = dayID * 86400;
-  const dayPoolID = `${poolId}-${dayID}`;
-  const pool = (await context.Pool.get(poolId));
+  const dayPoolID = `${pool.id}-${dayID}`;
   if (!pool) return null;
 
   let temp = await context.PoolDayData.get(dayPoolID);
@@ -99,14 +101,13 @@ export async function updatePoolDayData(
 }
 
 export async function updatePoolHourData(
-  poolId: string, 
   timestamp: number, 
+  pool: Pool,
   context: handlerContext
 ): Promise<PoolHourData | null> {
   const hourIndex = Math.floor(timestamp / 3600); // get unique hour within unix history
   const hourStartUnix = hourIndex * 3600; // want the rounded effect
-  const hourPoolID = `${poolId}-${hourIndex}`;
-  const pool = (await context.Pool.get(poolId));
+  const hourPoolID = `${pool.id}-${hourIndex}`;
   if (!pool) return null;
 
   let temp = await context.PoolHourData.get(hourPoolID);
@@ -160,82 +161,97 @@ export async function updatePoolHourData(
   return poolHourData as PoolHourData
 }
 
-// export function updateTokenDayData(token: Token, event: ethereum.Event): TokenDayData {
-//   const bundle = Bundle.load('1')!
-//   const timestamp = event.block.timestamp.toI32()
-//   const dayID = timestamp / 86400
-//   const dayStartTimestamp = dayID * 86400
-//   const tokenDayID = token.id.toString().concat('-').concat(dayID.toString())
-//   const tokenPrice = token.derivedETH.times(bundle.ethPriceUSD)
+export async function updateTokenDayData(
+  timestamp: number, 
+  token: Token, 
+  bundle: Bundle,
+  context: handlerContext
+): Promise<TokenDayData> {
+  const dayID = Math.floor(timestamp / 86400);
+  const dayStartTimestamp = dayID * 86400;
+  const tokenDayID = `${token.id}-${dayID}`;
+  const tokenPrice = token.derivedETH.times(bundle.ethPriceUSD);
+  const tokenDayDataRO = await context.TokenDayData.get(tokenDayID);
 
-//   let tokenDayData = TokenDayData.load(tokenDayID)
-//   if (tokenDayData === null) {
-//     tokenDayData = new TokenDayData(tokenDayID)
-//     tokenDayData.date = dayStartTimestamp
-//     tokenDayData.token = token.id
-//     tokenDayData.volume = ZERO_BD
-//     tokenDayData.volumeUSD = ZERO_BD
-//     tokenDayData.feesUSD = ZERO_BD
-//     tokenDayData.untrackedVolumeUSD = ZERO_BD
-//     tokenDayData.open = tokenPrice
-//     tokenDayData.high = tokenPrice
-//     tokenDayData.low = tokenPrice
-//     tokenDayData.close = tokenPrice
-//   }
+  let tokenDayData = tokenDayDataRO ? {...tokenDayDataRO} :
+                      {
+                        id: tokenDayID,
+                        date: dayStartTimestamp,
+                        token_id: token.id,
+                        volume: ZERO_BD,
+                        volumeUSD: ZERO_BD,
+                        feesUSD: ZERO_BD,
+                        untrackedVolumeUSD: ZERO_BD,
+                        open: tokenPrice,
+                        high: tokenPrice,
+                        low: tokenPrice,
+                        close: tokenPrice,
+                        priceUSD: ZERO_BD,
+                        openingPrice: ZERO_BD,
+                        totalValueLocked: ZERO_BD,
+                        totalValueLockedUSD: ZERO_BD
+                      };
 
-//   if (tokenPrice.gt(tokenDayData.high)) {
-//     tokenDayData.high = tokenPrice
-//   }
+  if (tokenPrice.gt(tokenDayData.high)) {
+    tokenDayData.high = tokenPrice;
+  }
 
-//   if (tokenPrice.lt(tokenDayData.low)) {
-//     tokenDayData.low = tokenPrice
-//   }
+  if (tokenPrice.lt(tokenDayData.low)) {
+    tokenDayData.low = tokenPrice;
+  }
 
-//   tokenDayData.close = tokenPrice
-//   tokenDayData.priceUSD = token.derivedETH.times(bundle.ethPriceUSD)
-//   tokenDayData.totalValueLocked = token.totalValueLocked
-//   tokenDayData.totalValueLockedUSD = token.totalValueLockedUSD
-//   tokenDayData.save()
+  tokenDayData.close = tokenPrice;
+  tokenDayData.priceUSD = token.derivedETH.times(bundle.ethPriceUSD);
+  tokenDayData.totalValueLocked = token.totalValueLocked;
+  tokenDayData.totalValueLockedUSD = token.totalValueLockedUSD;
 
-//   return tokenDayData as TokenDayData
-// }
+  context.TokenDayData.set(tokenDayData);
+  return tokenDayData as TokenDayData
+}
 
-// export function updateTokenHourData(token: Token, event: ethereum.Event): TokenHourData {
-//   const bundle = Bundle.load('1')!
-//   const timestamp = event.block.timestamp.toI32()
-//   const hourIndex = timestamp / 3600 // get unique hour within unix history
-//   const hourStartUnix = hourIndex * 3600 // want the rounded effect
-//   const tokenHourID = token.id.toString().concat('-').concat(hourIndex.toString())
-//   let tokenHourData = TokenHourData.load(tokenHourID)
-//   const tokenPrice = token.derivedETH.times(bundle.ethPriceUSD)
+export async function updateTokenHourData(
+  timestamp: number,
+  token: Token,
+  bundle: Bundle,
+  context: handlerContext
+): Promise<TokenHourData> {
+  const hourIndex = Math.floor(timestamp / 3600); // get unique hour within unix history
+  const hourStartUnix = hourIndex * 3600; // want the rounded effect
+  const tokenPrice = token.derivedETH.times(bundle.ethPriceUSD);
+  const tokenHourID = `${token.id}-${hourIndex}`;
+  const tokenHourDataRO = await context.TokenHourData.get(tokenHourID);
+  const tokenHourData = tokenHourDataRO ? {...tokenHourDataRO} :
+                        {
+                          id: tokenHourID,
+                          periodStartUnix: hourStartUnix,
+                          token_id: token.id,
+                          volume: ZERO_BD,
+                          volumeUSD: ZERO_BD,
+                          untrackedVolumeUSD: ZERO_BD,
+                          feesUSD: ZERO_BD,
+                          open: tokenPrice,
+                          high: tokenPrice,
+                          low: tokenPrice,
+                          close: tokenPrice,
+                          priceUSD: ZERO_BD,
+                          openingPrice: ZERO_BD,
+                          totalValueLocked: ZERO_BD,
+                          totalValueLockedUSD: ZERO_BD
+                        };
 
-//   if (tokenHourData === null) {
-//     tokenHourData = new TokenHourData(tokenHourID)
-//     tokenHourData.periodStartUnix = hourStartUnix
-//     tokenHourData.token = token.id
-//     tokenHourData.volume = ZERO_BD
-//     tokenHourData.volumeUSD = ZERO_BD
-//     tokenHourData.untrackedVolumeUSD = ZERO_BD
-//     tokenHourData.feesUSD = ZERO_BD
-//     tokenHourData.open = tokenPrice
-//     tokenHourData.high = tokenPrice
-//     tokenHourData.low = tokenPrice
-//     tokenHourData.close = tokenPrice
-//   }
+  if (tokenPrice.gt(tokenHourData.high)) {
+    tokenHourData.high = tokenPrice;
+  }
 
-//   if (tokenPrice.gt(tokenHourData.high)) {
-//     tokenHourData.high = tokenPrice
-//   }
+  if (tokenPrice.lt(tokenHourData.low)) {
+    tokenHourData.low = tokenPrice;
+  }
 
-//   if (tokenPrice.lt(tokenHourData.low)) {
-//     tokenHourData.low = tokenPrice
-//   }
+  tokenHourData.close = tokenPrice;
+  tokenHourData.priceUSD = tokenPrice;
+  tokenHourData.totalValueLocked = token.totalValueLocked;
+  tokenHourData.totalValueLockedUSD = token.totalValueLockedUSD;
 
-//   tokenHourData.close = tokenPrice
-//   tokenHourData.priceUSD = tokenPrice
-//   tokenHourData.totalValueLocked = token.totalValueLocked
-//   tokenHourData.totalValueLockedUSD = token.totalValueLockedUSD
-//   tokenHourData.save()
-
-//   return tokenHourData as TokenHourData
-// }
+  context.TokenHourData.set(tokenHourData);
+  return tokenHourData as TokenHourData
+}

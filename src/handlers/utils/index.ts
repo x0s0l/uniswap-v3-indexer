@@ -1,4 +1,4 @@
-import { BigDecimal } from "generated";
+import { BigDecimal, handlerContext, Transaction } from "generated";
 import { ZERO_BD, ONE_BD, ZERO_BI } from "./constants";
 
 export function exponentToBigDecimal(decimals: bigint): BigDecimal {
@@ -79,4 +79,35 @@ export function convertTokenToDecimal(
   return new BigDecimal(tokenAmount.toString()).div(
     exponentToBigDecimal(exchangeDecimals)
   );
+}
+
+export async function loadTransaction(
+  txHash: string, 
+  blockNumber: number,
+  timestamp: number,
+  gasPrice: bigint,
+  context: handlerContext
+): Promise<Transaction> {
+  const txRO = await context.Transaction.get(txHash);
+  let transaction;
+  
+  if (txRO) {
+    transaction = {...txRO};
+  } else {
+    transaction = {
+      id: txHash,
+      blockNumber: 0,
+      timestamp: 0,
+      gasUsed: ZERO_BI, //needs to be moved to transaction receipt
+      gasPrice: ZERO_BI
+    };    
+  }
+
+  transaction.blockNumber = blockNumber;
+  transaction.timestamp = timestamp;
+  transaction.gasUsed = ZERO_BI; //needs to be moved to transaction receipt
+  transaction.gasPrice = gasPrice;
+
+  context.Transaction.set(transaction as Transaction);
+  return transaction as Transaction
 }
