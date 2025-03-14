@@ -15,7 +15,7 @@ UniswapV3Pool.Burn.handlerWithLoader({
         const upperTickId = `${event.srcAddress}#${event.params.tickUpper}`;
 
         const res = await Promise.all([
-            context.Bundle.get('1'),
+            context.Bundle.get(event.chainId.toString()),
             context.Factory.get(factoryAddress),
             context.Token.get(pool.token0_id),
             context.Token.get(pool.token1_id),
@@ -47,6 +47,7 @@ UniswapV3Pool.Burn.handlerWithLoader({
         const pool = {...poolRO};
         const token0 = {...token0RO};
         const token1 = {...token1RO};
+        const timestamp = event.block.timestamp;
         
         const amount0 = convertTokenToDecimal(event.params.amount0, token0.decimals);
         const amount1 = convertTokenToDecimal(event.params.amount1, token1.decimals);
@@ -77,7 +78,7 @@ UniswapV3Pool.Burn.handlerWithLoader({
         const transaction = await loadTransaction(
             event.transaction.hash,
             event.block.number,
-            event.block.timestamp,
+            timestamp,
             event.transaction.gasPrice || ZERO_BI,
             context
         );
@@ -114,13 +115,13 @@ UniswapV3Pool.Burn.handlerWithLoader({
             context.Tick.set(upperTick);
         }
 
-        intervalUpdates.updateUniswapDayData(event.block.timestamp, factory, context);
-        intervalUpdates.updatePoolDayData(event.block.timestamp, pool, context);
-        intervalUpdates.updatePoolHourData(event.block.timestamp, pool, context);
-        intervalUpdates.updateTokenDayData(event.block.timestamp, token0, bundle, context);
-        intervalUpdates.updateTokenDayData(event.block.timestamp, token1, bundle, context);
-        intervalUpdates.updateTokenHourData(event.block.timestamp, token0, bundle, context);
-        intervalUpdates.updateTokenHourData(event.block.timestamp, token1, bundle, context);
+        intervalUpdates.updateUniswapDayData(timestamp, factory, context);
+        intervalUpdates.updatePoolDayData(timestamp, pool, context);
+        intervalUpdates.updatePoolHourData(timestamp, pool, context);
+        intervalUpdates.updateTokenDayData(timestamp, token0, bundle, context);
+        intervalUpdates.updateTokenDayData(timestamp, token1, bundle, context);
+        intervalUpdates.updateTokenHourData(timestamp, token0, bundle, context);
+        intervalUpdates.updateTokenHourData(timestamp, token1, bundle, context);
 
         context.Token.set(token0);
         context.Token.set(token1);

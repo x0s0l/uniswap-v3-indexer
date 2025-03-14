@@ -124,16 +124,14 @@ export async function findNativePerToken(
  * If both are, return sum of two amounts
  * If neither is, return 0
  */
-export async function getTrackedAmountUSD(
-  context: handlerContext,
+export function getTrackedAmountUSD(
+  bundle: Bundle,
   tokenAmount0: BigDecimal,
   token0: Token,
   tokenAmount1: BigDecimal,
   token1: Token,
-  chainId: string,
   whitelistTokens: string[]
-): Promise<BigDecimal> {
-  const bundle = await context.Bundle.get(chainId);
+): BigDecimal {
   if (!bundle) return ZERO_BD;
 
   const price0USD = token0.derivedETH.times(bundle.ethPriceUSD);

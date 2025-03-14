@@ -24,7 +24,7 @@ UniswapV3Pool.Initialize.handler(async ({event, context}) => {
     
     context.Pool.set(pool);
 
-    let bundle = await context.Bundle.get('1');
+    let bundle = await context.Bundle.get(event.chainId.toString());
     if (!bundle) return;
 
     // update ETH price now that prices could have changed
