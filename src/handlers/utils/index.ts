@@ -86,19 +86,14 @@ export async function loadTransaction(
     context: handlerContext
 ): Promise<Transaction> {
     const txRO = await context.Transaction.get(txHash);
-    let transaction;
-    
-    if (txRO) {
-        transaction = {...txRO};
-    } else {
-        transaction = {
-        id: txHash,
-        blockNumber: 0,
-        timestamp: 0,
-        gasUsed: ZERO_BI, //needs to be moved to transaction receipt
-        gasPrice: ZERO_BI
-        };    
-    }
+    const transaction = txRO ? {...txRO} :
+                        {
+                            id: txHash,
+                            blockNumber: 0,
+                            timestamp: 0,
+                            gasUsed: ZERO_BI, //needs to be moved to transaction receipt
+                            gasPrice: ZERO_BI
+                        };
 
     transaction.blockNumber = blockNumber;
     transaction.timestamp = timestamp;

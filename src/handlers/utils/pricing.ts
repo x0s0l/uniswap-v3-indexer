@@ -29,12 +29,10 @@ export function sqrtPriceX96ToTokenPrices(
 
 export async function getNativePriceInUSD(
   context: handlerContext,
-  chainId: number,
   stablecoinWrappedNativePoolId: string,
   stablecoinIsToken0: boolean
 ): Promise<BigDecimal> {
-  const poolId = `${chainId}_${stablecoinWrappedNativePoolId}`;
-  const stablecoinWrappedNativePool = await context.Pool.get(poolId);
+  const stablecoinWrappedNativePool = await context.Pool.get(stablecoinWrappedNativePoolId);
 
   if (stablecoinWrappedNativePool) {
     return stablecoinIsToken0
@@ -51,11 +49,12 @@ export async function getNativePriceInUSD(
 export async function findNativePerToken(
   context: handlerContext,
   token: Token,
+  bundle: Bundle,
   wrappedNativeAddress: string,
   stablecoinAddresses: string[],
   minimumNativeLocked: BigDecimal
 ): Promise<BigDecimal> {
-  const [chainId, tokenAddress] = token.id.split("_");
+  const tokenAddress = token.id;
 
   if (tokenAddress == wrappedNativeAddress || tokenAddress == ADDRESS_ZERO) {
     return ONE_BD;
@@ -64,9 +63,6 @@ export async function findNativePerToken(
   const whiteList = token.whitelistPools;
   let largestLiquidityETH = ZERO_BD;
   let priceSoFar = ZERO_BD;
-
-  const bundle = await context.Bundle.get(chainId);
-  if (!bundle) return ZERO_BD;
 
   if (stablecoinAddresses.includes(tokenAddress)) {
     priceSoFar = safeDiv(ONE_BD, bundle.ethPriceUSD);

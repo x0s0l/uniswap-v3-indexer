@@ -37,47 +37,41 @@ export async function updateUniswapDayData(
   uniswapDayData.txCount = factory.txCount;
 
   context.UniswapDayData.set(uniswapDayData);
-  return uniswapDayData as UniswapDayData;
+  return uniswapDayData;
 }
 
 export async function updatePoolDayData(
   timestamp: number, 
   pool: Pool, 
   context: handlerContext
-): Promise<PoolDayData | null> {
+): Promise<PoolDayData> {
   const dayID = Math.floor(timestamp / 86400);
   const dayStartTimestamp = dayID * 86400;
   const dayPoolID = `${pool.id}-${dayID}`;
-  if (!pool) return null;
+  const poolDayDataRO = await context.PoolDayData.get(dayPoolID);
+  const poolDayData = poolDayDataRO ? {...poolDayDataRO} :
+                      {
+                        id: dayPoolID,
+                        date: dayStartTimestamp,
+                        pool_id: pool.id,
+                        // things that dont get initialized always
+                        volumeToken0: ZERO_BD,
+                        volumeToken1: ZERO_BD,
+                        volumeUSD: ZERO_BD,
+                        feesUSD: ZERO_BD,
+                        txCount: ZERO_BI,
+                        openingPrice: pool.token0Price,
+                        high: pool.token0Price,
+                        low: pool.token0Price,
+                        close: pool.token0Price,
 
-  let temp = await context.PoolDayData.get(dayPoolID);
-
-  if (!temp) {
-    temp = {
-      id: dayPoolID,
-      date: dayStartTimestamp,
-      pool_id: pool.id,
-      // things that dont get initialized always
-      volumeToken0: ZERO_BD,
-      volumeToken1: ZERO_BD,
-      volumeUSD: ZERO_BD,
-      feesUSD: ZERO_BD,
-      txCount: ZERO_BI,
-      openingPrice: pool.token0Price,
-      high: pool.token0Price,
-      low: pool.token0Price,
-      close: pool.token0Price,
-
-      liquidity: pool.liquidity,
-      sqrtPrice: pool.sqrtPrice,
-      token0Price: pool.token0Price,
-      token1Price: pool.token1Price,
-      tick: pool.tick,
-      tvlUSD: pool.totalValueLockedUSD,
-    };
-  }
-
-  const poolDayData = {...temp};
+                        liquidity: pool.liquidity,
+                        sqrtPrice: pool.sqrtPrice,
+                        token0Price: pool.token0Price,
+                        token1Price: pool.token1Price,
+                        tick: pool.tick,
+                        tvlUSD: pool.totalValueLockedUSD,
+                      };
 
   if (pool.token0Price.gt(poolDayData.high)) {
     poolDayData.high = pool.token0Price;
@@ -97,19 +91,17 @@ export async function updatePoolDayData(
   poolDayData.txCount = poolDayData.txCount + ONE_BI;
   
   context.PoolDayData.set(poolDayData);
-  return poolDayData as PoolDayData
+  return poolDayData as PoolDayData;
 }
 
 export async function updatePoolHourData(
   timestamp: number, 
   pool: Pool,
   context: handlerContext
-): Promise<PoolHourData | null> {
+): Promise<PoolHourData> {
   const hourIndex = Math.floor(timestamp / 3600); // get unique hour within unix history
   const hourStartUnix = hourIndex * 3600; // want the rounded effect
   const hourPoolID = `${pool.id}-${hourIndex}`;
-  if (!pool) return null;
-
   let temp = await context.PoolHourData.get(hourPoolID);
 
   if (!temp) {
