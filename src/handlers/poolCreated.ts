@@ -8,9 +8,9 @@ import { ZERO_BD, ZERO_BI, ONE_BI, ADDRESS_ZERO } from "./utils/constants";
 import { CHAIN_CONFIGS } from "./utils/chains";
 import { getTokenMetadata } from "./utils/tokenMetadata";
 
-// UniswapV3Factory.PoolCreated.contractRegister(({ event, context }) => {
-//   context.addUniswapV3Pool(event.params.pool);
-// }, { preRegisterDynamicContracts: true });
+UniswapV3Factory.PoolCreated.contractRegister(({ event, context }) => {
+  context.addUniswapV3Pool(event.params.pool);
+}, { preRegisterDynamicContracts: true });
 
 UniswapV3Factory.PoolCreated.handlerWithLoader({
     loader: async ({event, context}) => {

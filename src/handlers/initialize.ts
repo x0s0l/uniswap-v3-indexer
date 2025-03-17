@@ -52,6 +52,7 @@ UniswapV3Pool.Initialize.handler(async ({event, context}) => {
             findNativePerToken(
                 context,
                 token0 as Token,
+                bundle,
                 wrappedNativeAddress,
                 stablecoinAddresses,
                 minimumNativeLocked,
@@ -59,6 +60,7 @@ UniswapV3Pool.Initialize.handler(async ({event, context}) => {
             findNativePerToken(
                 context,
                 token1 as Token,
+                bundle,
                 wrappedNativeAddress,
                 stablecoinAddresses,
                 minimumNativeLocked,

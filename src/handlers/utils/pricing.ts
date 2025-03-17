@@ -29,10 +29,12 @@ export function sqrtPriceX96ToTokenPrices(
 
 export async function getNativePriceInUSD(
   context: handlerContext,
+  chainId: number,
   stablecoinWrappedNativePoolId: string,
   stablecoinIsToken0: boolean
 ): Promise<BigDecimal> {
-  const stablecoinWrappedNativePool = await context.Pool.get(stablecoinWrappedNativePoolId);
+  const poolId = `${chainId}-${stablecoinWrappedNativePoolId}`;
+  const stablecoinWrappedNativePool = await context.Pool.get(poolId);
 
   if (stablecoinWrappedNativePool) {
     return stablecoinIsToken0

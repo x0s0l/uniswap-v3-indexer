@@ -140,6 +140,7 @@ UniswapV3Pool.Swap.handlerWithLoader({
         // update USD pricing
         bundle.ethPriceUSD = await pricing.getNativePriceInUSD(
             context, 
+            event.chainId,
             stablecoinWrappedNativePoolId, 
             stablecoinIsToken0
         );
