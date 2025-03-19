@@ -130,10 +130,10 @@ UniswapV3Factory.PoolCreated.handlerWithLoader({
         };
 
         // update white listed pools
-        if (whitelistTokens.includes(tokens[0].id)) {
+        if (whitelistTokens.includes(tokens[0].id.split('-')[1])) {
             tokens[1].whitelistPools.push(pool.id);
         }
-        if (whitelistTokens.includes(tokens[1].id)) {
+        if (whitelistTokens.includes(tokens[1].id.split('-')[1])) {
             tokens[0].whitelistPools.push(pool.id);
         }
 
@@ -151,11 +151,10 @@ async function getToken(id: string, chainId: number): Promise<Token> {
     const tokenMetadata = await getTokenMetadata(id, chainId);
 
     return {
-        id,
+        id: `${chainId}-${id}`,
         symbol: tokenMetadata.symbol,
         name: tokenMetadata.name,
         decimals: BigInt(tokenMetadata.decimals),
-        totalSupply: 0n,
         volume: ZERO_BD,
         volumeUSD: ZERO_BD,
         untrackedVolumeUSD: ZERO_BD,

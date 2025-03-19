@@ -1,4 +1,4 @@
-import { Bundle, Pool, Token, BigDecimal, handlerContext } from "generated";
+import { Bundle, Token, BigDecimal, handlerContext } from "generated";
 import { ADDRESS_ZERO, ONE_BD, ZERO_BD, ZERO_BI } from "./constants";
 import { exponentToBigDecimal, safeDiv } from "./index";
 import { NativeTokenDetails } from "./nativeTokenDetails";
@@ -12,17 +12,14 @@ export function sqrtPriceX96ToTokenPrices(
   nativeTokenDetails: NativeTokenDetails
 ): BigDecimal[] {
   const token0Decimals =
-    token0.id == ADDRESS_ZERO ? nativeTokenDetails.decimals : token0.decimals;
+    token0.id.split('-')[1] === ADDRESS_ZERO ? nativeTokenDetails.decimals : token0.decimals;
   const token1Decimals =
-    token1.id == ADDRESS_ZERO ? nativeTokenDetails.decimals : token1.decimals;
+    token1.id.split('-')[1] === ADDRESS_ZERO ? nativeTokenDetails.decimals : token1.decimals;
 
   const num = new BigDecimal((sqrtPriceX96 * sqrtPriceX96).toString());
   const denom = new BigDecimal(Q192.toString());
-  const price1 = num
-    .div(denom)
-    .times(exponentToBigDecimal(token0Decimals))
-    .div(exponentToBigDecimal(token1Decimals));
-
+  const price1 = exponentToBigDecimal(token0Decimals).times(num)
+                .div(exponentToBigDecimal(token1Decimals).times(denom));
   const price0 = safeDiv(new BigDecimal("1"), price1);
   return [price0, price1];
 }
@@ -56,63 +53,58 @@ export async function findNativePerToken(
   stablecoinAddresses: string[],
   minimumNativeLocked: BigDecimal
 ): Promise<BigDecimal> {
-  const tokenAddress = token.id;
+  const tokenAddress = token.id.split("-")[1];
 
-  if (tokenAddress == wrappedNativeAddress || tokenAddress == ADDRESS_ZERO) {
+  if (tokenAddress === wrappedNativeAddress || tokenAddress === ADDRESS_ZERO) {
     return ONE_BD;
   }
 
-  const whiteList = token.whitelistPools;
+  if (stablecoinAddresses.includes(tokenAddress)) {
+    return safeDiv(ONE_BD, bundle.ethPriceUSD);
+  }
+
+  const whiteList = await Promise.all(
+    // Pool IDs already include chainId since we store them that way in whitelistPools
+    token.whitelistPools.map(poolId => context.Pool.get(poolId))
+  );
   let largestLiquidityETH = ZERO_BD;
   let priceSoFar = ZERO_BD;
 
-  if (stablecoinAddresses.includes(tokenAddress)) {
-    priceSoFar = safeDiv(ONE_BD, bundle.ethPriceUSD);
-  } else {
-    for (let i = 0; i < whiteList.length; ++i) {
-      const poolAddress = whiteList[i];
-      // Pool IDs already include chainId since we store them that way in whitelistPools
-      const pool = await context.Pool.get(poolAddress);
+  for (const pool of whiteList) {
+    if (pool && pool.liquidity > ZERO_BI) {
+      if (pool.token0_id === token.id) {
+        const token1 = await context.Token.get(pool.token1_id);
 
-      if (pool) {
-        if (pool.liquidity > ZERO_BI) {
-          const poolToken0 = pool.token0_id.split("_")[1];
-          const poolToken1 = pool.token1_id.split("_")[1];
+        if (token1) {
+          const ethLocked = pool.totalValueLockedToken1.times(token1.derivedETH);
 
-          if (poolToken0 == tokenAddress) {
-            const token1 = await context.Token.get(pool.token1_id);
-            if (token1) {
-              const ethLocked = pool.totalValueLockedToken1.times(
-                token1.derivedETH
-              );
-              if (
-                ethLocked.gt(largestLiquidityETH) &&
-                ethLocked.gt(minimumNativeLocked)
-              ) {
-                largestLiquidityETH = ethLocked;
-                priceSoFar = pool.token1Price.times(token1.derivedETH);
-              }
-            }
+          if (
+            ethLocked.gt(largestLiquidityETH) &&
+            ethLocked.gt(minimumNativeLocked)
+          ) {
+            largestLiquidityETH = ethLocked;
+            priceSoFar = pool.token1Price.times(token1.derivedETH);
           }
-          if (poolToken1 == tokenAddress) {
-            const token0 = await context.Token.get(pool.token0_id);
-            if (token0) {
-              const ethLocked = pool.totalValueLockedToken0.times(
-                token0.derivedETH
-              );
-              if (
-                ethLocked.gt(largestLiquidityETH) &&
-                ethLocked.gt(minimumNativeLocked)
-              ) {
-                largestLiquidityETH = ethLocked;
-                priceSoFar = pool.token0Price.times(token0.derivedETH);
-              }
-            }
+        }
+      }
+      if (pool.token1_id === token.id) {
+        const token0 = await context.Token.get(pool.token0_id);
+        
+        if (token0) {
+          const ethLocked = pool.totalValueLockedToken0.times(token0.derivedETH);
+
+          if (
+            ethLocked.gt(largestLiquidityETH) &&
+            ethLocked.gt(minimumNativeLocked)
+          ) {
+            largestLiquidityETH = ethLocked;
+            priceSoFar = pool.token0Price.times(token0.derivedETH);
           }
         }
       }
     }
   }
+
   return priceSoFar;
 }
 
@@ -136,8 +128,8 @@ export function getTrackedAmountUSD(
   const price1USD = token1.derivedETH.times(bundle.ethPriceUSD);
 
   // Strip chainId prefix from token ids for whitelist comparison
-  const token0Address = token0.id.split("_")[1];
-  const token1Address = token1.id.split("_")[1];
+  const token0Address = token0.id.split("-")[1];
+  const token1Address = token1.id.split("-")[1];
 
   // both are whitelist tokens, return sum of both amounts
   if (

@@ -2,7 +2,7 @@ import { createPublicClient, http, getContract, type PublicClient } from "viem";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { join } from "path";
 import { ADDRESS_ZERO } from "./constants";
-import { getChainConfig } from "./chains";
+import { CHAIN_CONFIGS } from "./chains";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -42,7 +42,7 @@ const ERC20_ABI = [
     outputs: [{ type: "uint8" }],
     stateMutability: "view",
     type: "function",
-  },
+  }
 ] as const;
 
 // Create .cache directory if it doesn't exist
@@ -162,10 +162,10 @@ export async function getTokenMetadata(
 ): Promise<TokenMetadata> {
   // Load cache for this chain
   const metadataCache = loadCache(chainId);
+  const chainConfig = CHAIN_CONFIGS[chainId];
 
   // Handle native token
   if (address.toLowerCase() === ADDRESS_ZERO.toLowerCase()) {
-    const chainConfig = getChainConfig(chainId);
     return {
       name: chainConfig.nativeTokenDetails.name,
       symbol: chainConfig.nativeTokenDetails.symbol,
@@ -174,7 +174,6 @@ export async function getTokenMetadata(
   }
 
   // Check for token overrides in chain config
-  const chainConfig = getChainConfig(chainId);
   const tokenOverride = chainConfig.tokenOverrides.find(
     (t) => t.address.toLowerCase() === address.toLowerCase()
   );
@@ -216,11 +215,10 @@ async function fetchTokenMetadataMulticall(
   address: string,
   chainId: number
 ): Promise<TokenMetadata> {
-  const client = getClient(chainId);
   const contract = getContract({
     address: address as `0x${string}`,
     abi: ERC20_ABI,
-    client,
+    client: getClient(chainId),
   });
 
   // Prepare promises but don't await them yet
@@ -230,19 +228,21 @@ async function fetchTokenMetadataMulticall(
   const symbolBytes32Promise = contract.read.SYMBOL().catch(() => null);
   const decimalsPromise = contract.read.decimals().catch(() => 18); // Default to 18
 
+  // contract.read.
+
   // Execute all promises in a single multicall batch
   const [
     nameResult,
     nameBytes32Result,
     symbolResult,
     symbolBytes32Result,
-    decimalsResult,
+    decimalsResult
   ] = await Promise.all([
     namePromise,
     nameBytes32Promise,
     symbolPromise,
     symbolBytes32Promise,
-    decimalsPromise,
+    decimalsPromise
   ]);
 
   // Process name with fallbacks
@@ -278,6 +278,6 @@ async function fetchTokenMetadataMulticall(
   return {
     name: name || "unknown",
     symbol: symbol || "UNKNOWN",
-    decimals: typeof decimalsResult === "number" ? decimalsResult : 18,
+    decimals: typeof decimalsResult === "number" ? decimalsResult : 18
   };
 }

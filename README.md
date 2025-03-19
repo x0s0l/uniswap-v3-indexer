@@ -1,6 +1,8 @@
 
 # Envio Uniswap V3 Indexer
 
+> [!NOTE]
+> Tokens in this indexer doesn't have the `totalSupply` field as it cannot be updated correctly
 
 
 ## Queries for pool listing
