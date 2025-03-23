@@ -1,20 +1,21 @@
 import { UniswapV3Pool, Token, Pool, Bundle, Factory } from "generated";
 import { CHAIN_CONFIGS } from "./utils/chains";
-import {ONE_BI, ZERO_BI} from './utils/constants';
-import {convertTokenToDecimal, loadTransaction} from './utils/index';
-import {getTrackedAmountUSD} from './utils/pricing';
+import { ONE_BI, ZERO_BI } from './utils/constants';
+import { convertTokenToDecimal, loadTransaction } from './utils/index';
+import { getTrackedAmountUSD } from './utils/pricing';
 import * as intervalUpdates from './utils/intervalUpdates';
 
 
 UniswapV3Pool.Collect.handlerWithLoader({
-    loader: async ({event, context}) => {
-        const {factoryAddress} = CHAIN_CONFIGS[event.chainId];
-        const pool = await context.Pool.get(event.srcAddress);
+    loader: async ({ event, context }) => {
+        const poolId = `${event.chainId}-${event.srcAddress.toLowerCase()}`;
+        const pool = await context.Pool.get(poolId);
         if (!pool) return;
 
+        const { factoryAddress } = CHAIN_CONFIGS[event.chainId];
         const res = await Promise.all([
             context.Bundle.get(event.chainId.toString()),
-            context.Factory.get(factoryAddress),
+            context.Factory.get(`${event.chainId}-${factoryAddress.toLowerCase()}`),
             context.Token.get(pool.token0_id),
             context.Token.get(pool.token1_id)
         ]);
@@ -22,7 +23,7 @@ UniswapV3Pool.Collect.handlerWithLoader({
         return [pool, ...res];
     },
 
-    handler: async ({event, context, loaderReturn}) => {
+    handler: async ({ event, context, loaderReturn }) => {
         if (!loaderReturn) return;
 
         for (const item of loaderReturn) {
@@ -30,19 +31,21 @@ UniswapV3Pool.Collect.handlerWithLoader({
         }
 
         const [
-            poolRO, 
-            bundle, 
-            factoryRO, 
-            token0RO, 
+            poolRO,
+            bundle,
+            factoryRO,
+            token0RO,
             token1RO
         ] = loaderReturn as [Pool, Bundle, Factory, Token, Token];
-        
-        const factory = {...factoryRO};
-        const pool = {...poolRO};
-        const token0 = {...token0RO};
-        const token1 = {...token1RO};
-        const {whitelistTokens} = CHAIN_CONFIGS[event.chainId];
+
+        const factory = { ...factoryRO };
+        const pool = { ...poolRO };
+        const token0 = { ...token0RO };
+        const token1 = { ...token1RO };
+        const { whitelistTokens } = CHAIN_CONFIGS[event.chainId];
         const timestamp = event.block.timestamp;
+
+        console.log(token0)
 
         // burn entity
         const transaction = await loadTransaction(
@@ -52,7 +55,7 @@ UniswapV3Pool.Collect.handlerWithLoader({
             event.transaction.gasPrice || ZERO_BI,
             context
         );
-      
+
         // Get formatted amounts collected.
         const collectedAmountToken0 = convertTokenToDecimal(event.params.amount0, token0.decimals);
         const collectedAmountToken1 = convertTokenToDecimal(event.params.amount1, token1.decimals);
@@ -64,40 +67,40 @@ UniswapV3Pool.Collect.handlerWithLoader({
             token1 as Token,
             whitelistTokens,
         );
-      
+
         // Reset tvl aggregates until new amounts calculated
         factory.totalValueLockedETH = factory.totalValueLockedETH.minus(pool.totalValueLockedETH)
-      
+
         // Update globals
         factory.txCount = factory.txCount + ONE_BI;
-      
+
         // update token data
         token0.txCount = token0.txCount + ONE_BI;
         token0.totalValueLocked = token0.totalValueLocked.minus(collectedAmountToken0);
         token0.totalValueLockedUSD = token0.totalValueLocked.times(token0.derivedETH.times(bundle.ethPriceUSD));
-      
+
         token1.txCount = token1.txCount + ONE_BI;
         token1.totalValueLocked = token1.totalValueLocked.minus(collectedAmountToken1);
         token1.totalValueLockedUSD = token1.totalValueLocked.times(token1.derivedETH.times(bundle.ethPriceUSD));
-      
+
         // Adjust pool TVL based on amount collected.
         pool.txCount = pool.txCount + ONE_BI;
         pool.totalValueLockedToken0 = pool.totalValueLockedToken0.minus(collectedAmountToken0);
         pool.totalValueLockedToken1 = pool.totalValueLockedToken1.minus(collectedAmountToken1);
         pool.totalValueLockedETH = pool.totalValueLockedToken0
-          .times(token0.derivedETH)
-          .plus(pool.totalValueLockedToken1.times(token1.derivedETH));
+            .times(token0.derivedETH)
+            .plus(pool.totalValueLockedToken1.times(token1.derivedETH));
         pool.totalValueLockedUSD = pool.totalValueLockedETH.times(bundle.ethPriceUSD);
-      
+
         // Update aggregate fee collection values.
         pool.collectedFeesToken0 = pool.collectedFeesToken0.plus(collectedAmountToken0);
         pool.collectedFeesToken1 = pool.collectedFeesToken1.plus(collectedAmountToken1);
         pool.collectedFeesUSD = pool.collectedFeesUSD.plus(trackedCollectedAmountUSD);
-      
+
         // reset aggregates with new amounts
         factory.totalValueLockedETH = factory.totalValueLockedETH.plus(pool.totalValueLockedETH);
         factory.totalValueLockedUSD = factory.totalValueLockedETH.times(bundle.ethPriceUSD);
-      
+
         const collect = {
             id: `${transaction.id}-${event.logIndex}`,
             transaction_id: transaction.id,
@@ -111,7 +114,7 @@ UniswapV3Pool.Collect.handlerWithLoader({
             tickUpper: event.params.tickUpper,
             logIndex: BigInt(event.logIndex)
         };
-      
+
         intervalUpdates.updateUniswapDayData(timestamp, factory, context);
         intervalUpdates.updatePoolDayData(timestamp, pool, context);
         intervalUpdates.updatePoolHourData(timestamp, pool, context);

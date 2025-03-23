@@ -1,12 +1,12 @@
 import { UniswapV3Pool, Token, Pool, Bundle, Factory, Burn, Tick } from "generated";
 import { CHAIN_CONFIGS } from "./utils/chains";
-import {convertTokenToDecimal, loadTransaction} from './utils/index';
-import {ONE_BI, ZERO_BI} from './utils/constants';
+import { convertTokenToDecimal, loadTransaction } from './utils/index';
+import { ONE_BI, ZERO_BI } from './utils/constants';
 import * as intervalUpdates from './utils/intervalUpdates';
 
 UniswapV3Pool.Burn.handlerWithLoader({
-    loader: async ({event, context}) => {
-        const {factoryAddress} = CHAIN_CONFIGS[event.chainId];
+    loader: async ({ event, context }) => {
+        const { factoryAddress } = CHAIN_CONFIGS[event.chainId];
         const pool = await context.Pool.get(event.srcAddress);
         if (!pool) return;
 
@@ -16,7 +16,7 @@ UniswapV3Pool.Burn.handlerWithLoader({
 
         const res = await Promise.all([
             context.Bundle.get(event.chainId.toString()),
-            context.Factory.get(factoryAddress),
+            context.Factory.get(`${event.chainId}-${factoryAddress}`),
             context.Token.get(pool.token0_id),
             context.Token.get(pool.token1_id),
 
@@ -27,7 +27,7 @@ UniswapV3Pool.Burn.handlerWithLoader({
         return [pool, ...res];
     },
 
-    handler: async ({event, context, loaderReturn}) => {
+    handler: async ({ event, context, loaderReturn }) => {
         if (!loaderReturn) return;
         const [lowerTickRO, upperTickRO] = loaderReturn.splice(4) as Tick[];
 
@@ -36,25 +36,25 @@ UniswapV3Pool.Burn.handlerWithLoader({
         }
 
         const [
-            poolRO, 
-            bundle, 
-            factoryRO, 
-            token0RO, 
+            poolRO,
+            bundle,
+            factoryRO,
+            token0RO,
             token1RO
         ] = loaderReturn as [Pool, Bundle, Factory, Token, Token];
-        
-        const factory = {...factoryRO};
-        const pool = {...poolRO};
-        const token0 = {...token0RO};
-        const token1 = {...token1RO};
+
+        const factory = { ...factoryRO };
+        const pool = { ...poolRO };
+        const token0 = { ...token0RO };
+        const token1 = { ...token1RO };
         const timestamp = event.block.timestamp;
-        
+
         const amount0 = convertTokenToDecimal(event.params.amount0, token0.decimals);
         const amount1 = convertTokenToDecimal(event.params.amount1, token1.decimals);
 
         const amountUSD = amount0
-        .times(token0.derivedETH.times(bundle.ethPriceUSD))
-        .plus(amount1.times(token1.derivedETH.times(bundle.ethPriceUSD)));
+            .times(token0.derivedETH.times(bundle.ethPriceUSD))
+            .plus(amount1.times(token1.derivedETH.times(bundle.ethPriceUSD)));
 
         factory.txCount = factory.txCount + ONE_BI;
         token0.txCount = token0.txCount + ONE_BI;
@@ -64,7 +64,7 @@ UniswapV3Pool.Burn.handlerWithLoader({
         // Pools liquidity tracks the currently active liquidity given pools current tick.
         // We only want to update it on burn if the position being burnt includes the current tick.
         if (
-            typeof(pool.tick) === 'bigint' &&
+            typeof (pool.tick) === 'bigint' &&
             event.params.tickLower < pool.tick &&
             event.params.tickUpper > pool.tick
         ) {
@@ -103,8 +103,8 @@ UniswapV3Pool.Burn.handlerWithLoader({
 
         if (lowerTickRO && upperTickRO) {
             const amount = event.params.amount;
-            const lowerTick = {...lowerTickRO};
-            const upperTick = {...upperTickRO};
+            const lowerTick = { ...lowerTickRO };
+            const upperTick = { ...upperTickRO };
 
             lowerTick.liquidityGross = lowerTick.liquidityGross - amount;
             lowerTick.liquidityNet = lowerTick.liquidityNet - amount;

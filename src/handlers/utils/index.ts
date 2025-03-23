@@ -59,7 +59,7 @@ export function fastExponentiation(
     return result;
 }
 
-const NULL_ETH_HEX_STRING =
+export const NULL_ETH_HEX_STRING =
     "0x0000000000000000000000000000000000000000000000000000000000000001";
 
 export function isNullEthValue(value: string): boolean {

@@ -1,27 +1,29 @@
 import {
-  UniswapV3Factory,
-  Bundle,
-  Token,
-  Pool,
+    UniswapV3Factory,
+    Bundle,
+    Token,
+    Pool,
 } from "generated";
 import { ZERO_BD, ZERO_BI, ONE_BI, ADDRESS_ZERO } from "./utils/constants";
 import { CHAIN_CONFIGS } from "./utils/chains";
 import { getTokenMetadata } from "./utils/tokenMetadata";
 
 UniswapV3Factory.PoolCreated.contractRegister(({ event, context }) => {
-  context.addUniswapV3Pool(event.params.pool);
+    context.addUniswapV3Pool(event.params.pool);
 }, { preRegisterDynamicContracts: true });
 
 UniswapV3Factory.PoolCreated.handlerWithLoader({
-    loader: async ({event, context}) => {
+    loader: async ({ event, context }) => {
+        const { factoryAddress } = CHAIN_CONFIGS[event.chainId];
+
         return Promise.all([
-            context.Factory.get(CHAIN_CONFIGS[event.chainId].factoryAddress),
-            context.Token.get(event.params.token0),
-            context.Token.get(event.params.token1)
+            context.Factory.get(`${event.chainId}-${factoryAddress.toLowerCase()}`),
+            context.Token.get(`${event.chainId}-${event.params.token0.toLowerCase()}`),
+            context.Token.get(`${event.chainId}-${event.params.token1.toLowerCase()}`)
         ]);
     },
 
-    handler: async ({event, context, loaderReturn}) => {
+    handler: async ({ event, context, loaderReturn }) => {
         const {
             factoryAddress,
             whitelistTokens,
@@ -37,10 +39,10 @@ UniswapV3Factory.PoolCreated.handlerWithLoader({
         let factory;
 
         if (factoryRO) {
-            factory = {...factoryRO};
+            factory = { ...factoryRO };
         } else {
             factory = {
-                id: factoryAddress,
+                id: `${event.chainId}-${factoryAddress.toLowerCase()}`,
                 poolCount: ZERO_BI,
                 totalVolumeETH: ZERO_BD,
                 totalVolumeUSD: ZERO_BD,
@@ -72,25 +74,25 @@ UniswapV3Factory.PoolCreated.handlerWithLoader({
 
         try {
             const arr = [];
-    
+
             if (token0RO) {
-                tokens[0] = {...token0RO};
+                tokens[0] = { ...token0RO };
             } else {
                 arr.push(
                     getToken(event.params.token0, event.chainId)
-                    .then(token => tokens[0] = token)
+                        .then(token => tokens[0] = token)
                 );
             }
-    
+
             if (token1RO) {
-                tokens[1] = {...token1RO};
+                tokens[1] = { ...token1RO };
             } else {
                 arr.push(
                     getToken(event.params.token1, event.chainId)
-                    .then(token => tokens[1] = token)
+                        .then(token => tokens[1] = token)
                 );
             }
-    
+
             if (arr.length) {
                 await Promise.all(arr);
             }
@@ -151,7 +153,7 @@ async function getToken(id: string, chainId: number): Promise<Token> {
     const tokenMetadata = await getTokenMetadata(id, chainId);
 
     return {
-        id: `${chainId}-${id}`,
+        id: `${chainId}-${id.toLowerCase()}`,
         symbol: tokenMetadata.symbol,
         name: tokenMetadata.name,
         decimals: BigInt(tokenMetadata.decimals),

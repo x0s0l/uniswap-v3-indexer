@@ -1,23 +1,25 @@
 import { UniswapV3Pool, Token, Pool, Bundle, Factory, Tick, BigDecimal } from "generated";
-import {convertTokenToDecimal, loadTransaction, fastExponentiation, safeDiv} from './utils/index';
-import {ONE_BI, ZERO_BI, ONE_BD} from './utils/constants';
+import { convertTokenToDecimal, loadTransaction, fastExponentiation, safeDiv } from './utils/index';
+import { ONE_BI, ZERO_BI, ONE_BD } from './utils/constants';
 import { CHAIN_CONFIGS } from "./utils/chains";
 import * as intervalUpdates from './utils/intervalUpdates';
 
 
 UniswapV3Pool.Mint.handlerWithLoader({
-    loader: async ({event, context}) => {
-        const {factoryAddress} = CHAIN_CONFIGS[event.chainId];
-        const pool = await context.Pool.get(event.srcAddress);
+    loader: async ({ event, context }) => {
+        console.log('test')
+        const { factoryAddress } = CHAIN_CONFIGS[event.chainId];
+        const pool = await context.Pool.get(`${event.chainId}-${event.srcAddress}`);
         if (!pool) return;
 
         // tick entities
+        const factoryId = `${event.chainId}-${factoryAddress}`;
         const lowerTickId = `${event.srcAddress}#${event.params.tickLower}`;
         const upperTickId = `${event.srcAddress}#${event.params.tickUpper}`;
 
         const res = await Promise.all([
             context.Bundle.get(event.chainId.toString()),
-            context.Factory.get(factoryAddress),
+            context.Factory.get(factoryId),
             context.Token.get(pool.token0_id),
             context.Token.get(pool.token1_id),
 
@@ -28,34 +30,35 @@ UniswapV3Pool.Mint.handlerWithLoader({
         return [pool, ...res];
     },
 
-    handler: async ({event, context, loaderReturn}) => {
+    handler: async ({ event, context, loaderReturn }) => {
         if (!loaderReturn) return;
-        const [lowerTickRO, upperTickRO] = loaderReturn.splice(4) as Tick[];
+        const [lowerTickRO, upperTickRO] = loaderReturn.splice(5) as Tick[];
 
         for (const item of loaderReturn) {
             if (!item) return;
         }
 
         const [
-            poolRO, 
-            bundle, 
-            factoryRO, 
-            token0RO, 
+            poolRO,
+            bundle,
+            factoryRO,
+            token0RO,
             token1RO
         ] = loaderReturn as [Pool, Bundle, Factory, Token, Token];
-        
-        const factory = {...factoryRO};
-        const pool = {...poolRO};
-        const token0 = {...token0RO};
-        const token1 = {...token1RO};
+
+        const factory = { ...factoryRO };
+        const pool = { ...poolRO };
+        const token0 = { ...token0RO };
+        const token1 = { ...token1RO };
         const timestamp = event.block.timestamp;
-        
+
         const amount0 = convertTokenToDecimal(event.params.amount0, token0.decimals);
         const amount1 = convertTokenToDecimal(event.params.amount1, token1.decimals);
 
         const amountUSD = amount0
             .times(token0.derivedETH.times(bundle.ethPriceUSD))
             .plus(amount1.times(token1.derivedETH.times(bundle.ethPriceUSD)));
+
 
         // reset tvl aggregates until new amounts calculated
         factory.totalValueLockedETH = factory.totalValueLockedETH.minus(pool.totalValueLockedETH);
@@ -79,7 +82,7 @@ UniswapV3Pool.Mint.handlerWithLoader({
         // Pools liquidity tracks the currently active liquidity given pools current tick.
         // We only want to update it on mint if the new position includes the current tick.
         if (
-            typeof(pool.tick) === 'bigint' &&
+            typeof (pool.tick) === 'bigint' &&
             event.params.tickLower < pool.tick &&
             event.params.tickUpper > pool.tick
         ) {
@@ -131,23 +134,27 @@ UniswapV3Pool.Mint.handlerWithLoader({
         const utId = `${event.srcAddress}#${upperTickIdx}`;
         const amount = event.params.amount;
 
-        const lowerTick = lowerTickRO ? {...lowerTickRO} :
-                        {...createTick(
-                            ltId,
-                            lowerTickIdx,
-                            pool.id,
-                            timestamp,
-                            event.block.number
-                        )};
+        const lowerTick = lowerTickRO ? { ...lowerTickRO } :
+            {
+                ...createTick(
+                    ltId,
+                    lowerTickIdx,
+                    pool.id,
+                    timestamp,
+                    event.block.number
+                )
+            };
 
-        const upperTick = upperTickRO ? {...upperTickRO} :
-                        {...createTick(
-                            utId,
-                            upperTickIdx,
-                            pool.id,
-                            timestamp,
-                            event.block.number
-                        )};
+        const upperTick = upperTickRO ? { ...upperTickRO } :
+            {
+                ...createTick(
+                    utId,
+                    upperTickIdx,
+                    pool.id,
+                    timestamp,
+                    event.block.number
+                )
+            };
 
         lowerTick.liquidityGross = lowerTick.liquidityGross + amount;
         lowerTick.liquidityNet = lowerTick.liquidityNet + amount;
@@ -178,10 +185,10 @@ UniswapV3Pool.Mint.handlerWithLoader({
 
 
 function createTick(
-    tickId: string, 
-    tickIdx: bigint, 
-    poolId: string, 
-    timestamp: number, 
+    tickId: string,
+    tickIdx: bigint,
+    poolId: string,
+    timestamp: number,
     blockNumber: number
 ): Tick {
     // 1.0001^tick is token1/token0.
@@ -192,12 +199,12 @@ function createTick(
         tickIdx: tickIdx,
         pool_id: poolId,
         poolAddress: poolId,
-    
+
         createdAtTimestamp: BigInt(timestamp),
         createdAtBlockNumber: BigInt(blockNumber),
         liquidityGross: ZERO_BI,
         liquidityNet: ZERO_BI,
-        
+
         price0: Price0,
         price1: safeDiv(ONE_BD, Price0)
     };
