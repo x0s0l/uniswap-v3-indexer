@@ -167,7 +167,7 @@ UniswapV3Pool.Mint.handlerWithLoader({
         // TODO: Update Tick's volume, fees, and liquidity provider count. Computing these on the tick
         // level requires reimplementing some of the swapping code from v3-core.
 
-        intervalUpdates.updateUniswapDayData(timestamp, factory, context);
+        intervalUpdates.updateUniswapDayData(timestamp, event.chainId, factory, context);
         intervalUpdates.updatePoolDayData(timestamp, pool, context);
         intervalUpdates.updatePoolHourData(timestamp, pool, context);
         intervalUpdates.updateTokenDayData(timestamp, token0, bundle, context);

@@ -206,7 +206,7 @@ UniswapV3Pool.Swap.handlerWithLoader({
         };
 
         // interval data
-        const uniswapDayData = { ...await intervalUpdates.updateUniswapDayData(timestamp, factory, context) };
+        const uniswapDayData = { ...await intervalUpdates.updateUniswapDayData(timestamp, event.chainId, factory, context) };
         const poolDayData = { ...await intervalUpdates.updatePoolDayData(timestamp, pool, context) };
         const poolHourData = { ...await intervalUpdates.updatePoolHourData(timestamp, pool, context) };
         const token0DayData = { ...await intervalUpdates.updateTokenDayData(timestamp, token0, bundle, context) };

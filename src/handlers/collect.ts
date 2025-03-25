@@ -113,7 +113,7 @@ UniswapV3Pool.Collect.handlerWithLoader({
             logIndex: BigInt(event.logIndex)
         };
 
-        intervalUpdates.updateUniswapDayData(timestamp, factory, context);
+        intervalUpdates.updateUniswapDayData(timestamp, event.chainId, factory, context);
         intervalUpdates.updatePoolDayData(timestamp, pool, context);
         intervalUpdates.updatePoolHourData(timestamp, pool, context);
         intervalUpdates.updateTokenDayData(timestamp, token0, bundle, context);

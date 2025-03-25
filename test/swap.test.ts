@@ -238,7 +238,7 @@ describe('handleSwap', async () => {
         const dayId = Math.floor(timestamp / 86400);
         const hourId = Math.floor(timestamp / 3600);
 
-        const uniswapDayData: UniswapDayData = newMockDb.entities.UniswapDayData.get(dayId.toString())!;
+        const uniswapDayData: UniswapDayData = newMockDb.entities.UniswapDayData.get(`${chainId}-${dayId}`)!;
         assert.deepEqual(uniswapDayData.volumeETH.toString(), amountTotalETHTRacked.toString());
         assert.deepEqual(uniswapDayData.volumeUSD.toString(), amountTotalUSDTracked.toString());
         assert.deepEqual(uniswapDayData.feesUSD.toString(), feesUSD.toString());

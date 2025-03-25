@@ -2,7 +2,7 @@ import { TestHelpers, Pool, BigDecimal, Token } from 'generated';
 import { ChainConfig } from '../src/handlers/utils/chains';
 import { ZERO_BD, ZERO_BI } from '../src/handlers/utils/constants';
 
-const { MockDb, UniswapV3Factory, UniswapV3Pool } = TestHelpers;
+const { UniswapV3Factory } = TestHelpers;
 
 const FACTORY_ADDRESS = '0x1F98431c8aD98523631AE4a59f267346ea31F984';
 const USDC_MAINNET_ADDRESS = '0xaf88d065e77c8cc2239327c5edb3a432268e5831';
