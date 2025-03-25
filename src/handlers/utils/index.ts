@@ -37,11 +37,11 @@ export function fastExponentiation(
         return safeDiv(ONE_BD, result);
     }
 
-    if (power == ZERO_BI) {
+    if (power === ZERO_BI) {
         return ONE_BD;
     }
 
-    if (power == ONE_BI) {
+    if (power === ONE_BI) {
         return value;
     }
 

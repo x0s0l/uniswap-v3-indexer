@@ -7,15 +7,15 @@ import * as intervalUpdates from './utils/intervalUpdates';
 
 UniswapV3Pool.Mint.handlerWithLoader({
     loader: async ({ event, context }) => {
-        console.log('test')
         const { factoryAddress } = CHAIN_CONFIGS[event.chainId];
-        const pool = await context.Pool.get(`${event.chainId}-${event.srcAddress}`);
+        const poolId = `${event.chainId}-${event.srcAddress.toLowerCase()}`;
+        const pool = await context.Pool.get(poolId);
         if (!pool) return;
 
         // tick entities
-        const factoryId = `${event.chainId}-${factoryAddress}`;
-        const lowerTickId = `${event.srcAddress}#${event.params.tickLower}`;
-        const upperTickId = `${event.srcAddress}#${event.params.tickUpper}`;
+        const factoryId = `${event.chainId}-${factoryAddress.toLowerCase()}`;
+        const lowerTickId = `${event.srcAddress.toLowerCase()}#${event.params.tickLower}`;
+        const upperTickId = `${event.srcAddress.toLowerCase()}#${event.params.tickUpper}`;
 
         const res = await Promise.all([
             context.Bundle.get(event.chainId.toString()),
@@ -59,7 +59,6 @@ UniswapV3Pool.Mint.handlerWithLoader({
             .times(token0.derivedETH.times(bundle.ethPriceUSD))
             .plus(amount1.times(token1.derivedETH.times(bundle.ethPriceUSD)));
 
-
         // reset tvl aggregates until new amounts calculated
         factory.totalValueLockedETH = factory.totalValueLockedETH.minus(pool.totalValueLockedETH);
 
@@ -83,11 +82,12 @@ UniswapV3Pool.Mint.handlerWithLoader({
         // We only want to update it on mint if the new position includes the current tick.
         if (
             typeof (pool.tick) === 'bigint' &&
-            event.params.tickLower < pool.tick &&
+            event.params.tickLower <= pool.tick &&
             event.params.tickUpper > pool.tick
         ) {
             pool.liquidity = pool.liquidity + event.params.amount;
         }
+        console.log(pool.tick)
 
         pool.totalValueLockedToken0 = pool.totalValueLockedToken0.plus(amount0);
         pool.totalValueLockedToken1 = pool.totalValueLockedToken1.plus(amount1);
@@ -130,8 +130,8 @@ UniswapV3Pool.Mint.handlerWithLoader({
         // tick entities
         const lowerTickIdx = event.params.tickLower;
         const upperTickIdx = event.params.tickUpper;
-        const ltId = `${event.srcAddress}#${lowerTickIdx}`;
-        const utId = `${event.srcAddress}#${upperTickIdx}`;
+        const ltId = `${event.srcAddress.toLowerCase()}#${lowerTickIdx}`;
+        const utId = `${event.srcAddress.toLowerCase()}#${upperTickIdx}`;
         const amount = event.params.amount;
 
         const lowerTick = lowerTickRO ? { ...lowerTickRO } :
@@ -192,6 +192,7 @@ function createTick(
     blockNumber: number
 ): Tick {
     // 1.0001^tick is token1/token0.
+    console.log('tickIdx', tickIdx);
     const Price0 = fastExponentiation(new BigDecimal('1.0001'), tickIdx);
 
     return {

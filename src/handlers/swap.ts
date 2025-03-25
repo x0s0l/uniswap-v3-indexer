@@ -8,12 +8,13 @@ import * as intervalUpdates from './utils/intervalUpdates';
 UniswapV3Pool.Swap.handlerWithLoader({
     loader: async ({ event, context }) => {
         const { factoryAddress } = CHAIN_CONFIGS[event.chainId];
-        const pool = await context.Pool.get(event.srcAddress);
+        const poolId = `${event.chainId}-${event.srcAddress.toLowerCase()}`;
+        const pool = await context.Pool.get(poolId);
         if (!pool) return;
 
         const res = await Promise.all([
             context.Bundle.get(event.chainId.toString()),
-            context.Factory.get(`${event.chainId}-${factoryAddress}`),
+            context.Factory.get(`${event.chainId}-${factoryAddress.toLowerCase()}`),
             context.Token.get(pool.token0_id),
             context.Token.get(pool.token1_id)
         ]);
@@ -97,8 +98,7 @@ UniswapV3Pool.Swap.handlerWithLoader({
         factory.totalFeesUSD = factory.totalFeesUSD.plus(feesUSD);
 
         // reset aggregate tvl before individual pool tvl updates
-        const currentPoolTvlETH = pool.totalValueLockedETH;
-        factory.totalValueLockedETH = factory.totalValueLockedETH.minus(currentPoolTvlETH);
+        factory.totalValueLockedETH = factory.totalValueLockedETH.minus(pool.totalValueLockedETH);
 
         // pool volume
         pool.volumeToken0 = pool.volumeToken0.plus(amount0Abs);
@@ -146,7 +146,7 @@ UniswapV3Pool.Swap.handlerWithLoader({
         );
 
         context.Bundle.set(bundle);
-
+        
         token0.derivedETH = await pricing.findNativePerToken(
             context,
             token0,
@@ -188,7 +188,7 @@ UniswapV3Pool.Swap.handlerWithLoader({
         );
 
         const swap: Swap = {
-            id: `${transaction.id}-${event.logIndex}`,
+            id: `${transaction.id.toLowerCase()}-${event.logIndex}`,
             transaction_id: transaction.id,
             timestamp: transaction.timestamp,
             pool_id: pool.id,

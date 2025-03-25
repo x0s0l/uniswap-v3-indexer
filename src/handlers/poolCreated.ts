@@ -102,7 +102,7 @@ UniswapV3Factory.PoolCreated.handlerWithLoader({
         }
 
         const pool: Pool = {
-            id: `${event.chainId}-${event.params.pool}`,
+            id: `${event.chainId}-${event.params.pool.toLowerCase()}`,
             createdAtTimestamp: BigInt(event.block.timestamp),
             createdAtBlockNumber: BigInt(event.block.number),
             token0_id: tokens[0].id,

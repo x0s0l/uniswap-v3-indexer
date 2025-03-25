@@ -55,12 +55,14 @@ export async function findNativePerToken(
 ): Promise<BigDecimal> {
   const tokenAddress = token.id.split("-")[1];
 
-  if (tokenAddress === wrappedNativeAddress || tokenAddress === ADDRESS_ZERO) {
+  if (tokenAddress === wrappedNativeAddress.toLowerCase() || tokenAddress === ADDRESS_ZERO) {
     return ONE_BD;
   }
 
-  if (stablecoinAddresses.includes(tokenAddress)) {
-    return safeDiv(ONE_BD, bundle.ethPriceUSD);
+  for (const addr of stablecoinAddresses) {
+    if (addr.toLowerCase() === tokenAddress) {
+      return safeDiv(ONE_BD, bundle.ethPriceUSD);
+    }
   }
 
   const whiteList = await Promise.all(

@@ -45,8 +45,6 @@ UniswapV3Pool.Collect.handlerWithLoader({
         const { whitelistTokens } = CHAIN_CONFIGS[event.chainId];
         const timestamp = event.block.timestamp;
 
-        console.log(token0)
-
         // burn entity
         const transaction = await loadTransaction(
             event.transaction.hash,
@@ -106,7 +104,7 @@ UniswapV3Pool.Collect.handlerWithLoader({
             transaction_id: transaction.id,
             timestamp: BigInt(timestamp),
             pool_id: pool.id,
-            owner: event.params.owner,
+            owner: event.params.owner.toLowerCase(),
             amount0: collectedAmountToken0,
             amount1: collectedAmountToken1,
             amountUSD: trackedCollectedAmountUSD,

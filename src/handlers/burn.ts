@@ -7,16 +7,17 @@ import * as intervalUpdates from './utils/intervalUpdates';
 UniswapV3Pool.Burn.handlerWithLoader({
     loader: async ({ event, context }) => {
         const { factoryAddress } = CHAIN_CONFIGS[event.chainId];
-        const pool = await context.Pool.get(event.srcAddress);
+        const poolId = `${event.chainId}-${event.srcAddress.toLowerCase()}`;
+        const pool = await context.Pool.get(poolId);
         if (!pool) return;
 
         // tick entities
-        const lowerTickId = `${event.srcAddress}#${event.params.tickLower}`;
-        const upperTickId = `${event.srcAddress}#${event.params.tickUpper}`;
+        const lowerTickId = `${event.srcAddress.toLowerCase()}#${event.params.tickLower}`;
+        const upperTickId = `${event.srcAddress.toLowerCase()}#${event.params.tickUpper}`;
 
         const res = await Promise.all([
             context.Bundle.get(event.chainId.toString()),
-            context.Factory.get(`${event.chainId}-${factoryAddress}`),
+            context.Factory.get(`${event.chainId}-${factoryAddress.toLowerCase()}`),
             context.Token.get(pool.token0_id),
             context.Token.get(pool.token1_id),
 
@@ -29,7 +30,7 @@ UniswapV3Pool.Burn.handlerWithLoader({
 
     handler: async ({ event, context, loaderReturn }) => {
         if (!loaderReturn) return;
-        const [lowerTickRO, upperTickRO] = loaderReturn.splice(4) as Tick[];
+        const [lowerTickRO, upperTickRO] = loaderReturn.splice(5) as Tick[];
 
         for (const item of loaderReturn) {
             if (!item) return;
@@ -65,7 +66,7 @@ UniswapV3Pool.Burn.handlerWithLoader({
         // We only want to update it on burn if the position being burnt includes the current tick.
         if (
             typeof (pool.tick) === 'bigint' &&
-            event.params.tickLower < pool.tick &&
+            event.params.tickLower <= pool.tick &&
             event.params.tickUpper > pool.tick
         ) {
             // todo: this liquidity can be calculated from the real reserves and
