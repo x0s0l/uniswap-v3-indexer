@@ -1,6 +1,6 @@
 import { Bundle, Token, BigDecimal, handlerContext } from "generated";
 import { ADDRESS_ZERO, ONE_BD, ZERO_BD, ZERO_BI } from "./constants";
-import { exponentToBigDecimal, safeDiv } from "./index";
+import { exponentToBigDecimal, safeDiv, isAddressInList } from "./index";
 import { NativeTokenDetails } from "./nativeTokenDetails";
 
 const Q192 = BigInt(2) ** BigInt(192);
@@ -59,10 +59,8 @@ export async function findNativePerToken(
     return ONE_BD;
   }
 
-  for (const addr of stablecoinAddresses) {
-    if (addr.toLowerCase() === tokenAddress) {
-      return safeDiv(ONE_BD, bundle.ethPriceUSD);
-    }
+  if (isAddressInList(tokenAddress, stablecoinAddresses)) {
+    return safeDiv(ONE_BD, bundle.ethPriceUSD);
   }
 
   const whiteList = await Promise.all(
@@ -73,35 +71,36 @@ export async function findNativePerToken(
   let priceSoFar = ZERO_BD;
 
   for (const pool of whiteList) {
-    if (pool && pool.liquidity > ZERO_BI) {
-      if (pool.token0_id === token.id) {
-        const token1 = await context.Token.get(pool.token1_id);
+    if (!pool || pool.liquidity <= ZERO_BI) { continue; }
 
-        if (token1) {
-          const ethLocked = pool.totalValueLockedToken1.times(token1.derivedETH);
+    if (pool.token0_id === token.id) {
+      const token1 = await context.Token.get(pool.token1_id);
 
-          if (
-            ethLocked.gt(largestLiquidityETH) &&
-            ethLocked.gt(minimumNativeLocked)
-          ) {
-            largestLiquidityETH = ethLocked;
-            priceSoFar = pool.token1Price.times(token1.derivedETH);
-          }
+      if (token1) {
+        const ethLocked = pool.totalValueLockedToken1.times(token1.derivedETH);
+
+        if (
+          ethLocked.gt(largestLiquidityETH) &&
+          ethLocked.gt(minimumNativeLocked)
+        ) {
+          largestLiquidityETH = ethLocked;
+          priceSoFar = pool.token1Price.times(token1.derivedETH);
         }
       }
-      if (pool.token1_id === token.id) {
-        const token0 = await context.Token.get(pool.token0_id);
-        
-        if (token0) {
-          const ethLocked = pool.totalValueLockedToken0.times(token0.derivedETH);
+    }
 
-          if (
-            ethLocked.gt(largestLiquidityETH) &&
-            ethLocked.gt(minimumNativeLocked)
-          ) {
-            largestLiquidityETH = ethLocked;
-            priceSoFar = pool.token0Price.times(token0.derivedETH);
-          }
+    if (pool.token1_id === token.id) {
+      const token0 = await context.Token.get(pool.token0_id);
+      
+      if (token0) {
+        const ethLocked = pool.totalValueLockedToken0.times(token0.derivedETH);
+
+        if (
+          ethLocked.gt(largestLiquidityETH) &&
+          ethLocked.gt(minimumNativeLocked)
+        ) {
+          largestLiquidityETH = ethLocked;
+          priceSoFar = pool.token0Price.times(token0.derivedETH);
         }
       }
     }
@@ -133,27 +132,21 @@ export function getTrackedAmountUSD(
   const token0Address = token0.id.split("-")[1];
   const token1Address = token1.id.split("-")[1];
 
+  const token0IsWhitelisted = isAddressInList(token0Address, whitelistTokens);
+  const token1IsWhitelisted = isAddressInList(token1Address, whitelistTokens);
+
   // both are whitelist tokens, return sum of both amounts
-  if (
-    whitelistTokens.includes(token0Address) &&
-    whitelistTokens.includes(token1Address)
-  ) {
+  if (token0IsWhitelisted && token1IsWhitelisted) {
     return tokenAmount0.times(price0USD).plus(tokenAmount1.times(price1USD));
   }
 
   // take double value of the whitelisted token amount
-  if (
-    whitelistTokens.includes(token0Address) &&
-    !whitelistTokens.includes(token1Address)
-  ) {
+  if (token0IsWhitelisted && !token1IsWhitelisted) {
     return tokenAmount0.times(price0USD).times(new BigDecimal("2"));
   }
 
   // take double value of the whitelisted token amount
-  if (
-    !whitelistTokens.includes(token0Address) &&
-    whitelistTokens.includes(token1Address)
-  ) {
+  if (!token0IsWhitelisted && token1IsWhitelisted) {
     return tokenAmount1.times(price1USD).times(new BigDecimal("2"));
   }
 

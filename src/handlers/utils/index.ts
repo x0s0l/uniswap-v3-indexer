@@ -1,6 +1,18 @@
 import { BigDecimal, handlerContext, Transaction } from "generated";
 import { ZERO_BD, ONE_BD, ZERO_BI, ONE_BI } from "./constants";
 
+export function isAddressInList(address: string, list: string[]): boolean {
+    address = address.toLowerCase();
+
+    for (const item of list) {
+        if (address === item.toLowerCase()) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
 export function exponentToBigDecimal(decimals: bigint): BigDecimal {
     let resultString = "1";
 
@@ -58,6 +70,15 @@ export function fastExponentiation(
 
     return result;
 }
+
+// For fast testing. Not to be used in production.
+// export function fastExponentiation(
+//     value: BigDecimal,
+//     power: bigint
+// ): BigDecimal {
+//     const res = parseFloat(value.toString()) ** parseInt(power.toString());
+//     return new BigDecimal(res.toString());
+// }
 
 export const NULL_ETH_HEX_STRING =
     "0x0000000000000000000000000000000000000000000000000000000000000001";

@@ -14,14 +14,14 @@ export enum ChainId {
   WORLD = 59144,
   UNICHAIN = 130,
   SONEIUM = 1868,
-}
+};
 
 // Native token details interface
 export interface NativeTokenDetails {
   symbol: string;
   name: string;
   decimals: bigint;
-}
+};
 
 // Configuration interface for each chain
 export interface ChainConfig {
@@ -37,7 +37,7 @@ export interface ChainConfig {
   poolsToSkip: string[];
   poolMappings: string[],
   nativeTokenDetails: NativeTokenDetails;
-}
+};
 
 // Static token definition interface
 export interface StaticTokenDefinition {
@@ -45,7 +45,7 @@ export interface StaticTokenDefinition {
   symbol: string;
   name: string;
   decimals: bigint;
-}
+};
 
 // Chain-specific configurations
 // Note: All token and pool addresses should be lowercase
@@ -402,27 +402,3 @@ export const CHAIN_CONFIGS: { [chainId: number]: ChainConfig } = {
     },
   },
 };
-
-// Helper function to get config for a specific chain
-export function getChainConfig(chainId: number): ChainConfig {
-  const config = CHAIN_CONFIGS[chainId];
-  if (!config) {
-    throw new Error(`Unsupported chain ID: ${chainId}`);
-  }
-  return config;
-}
-
-// Helper function to check if a token is whitelisted on a specific chain
-export function isTokenWhitelisted(
-  chainId: number,
-  tokenAddress: string
-): boolean {
-  const config = getChainConfig(chainId);
-  return config.whitelistTokens.includes(tokenAddress.toLowerCase());
-}
-
-// Helper function to check if a token is a stablecoin on a specific chain
-export function isStablecoin(chainId: number, tokenAddress: string): boolean {
-  const config = getChainConfig(chainId);
-  return config.stablecoinAddresses.includes(tokenAddress.toLowerCase());
-}

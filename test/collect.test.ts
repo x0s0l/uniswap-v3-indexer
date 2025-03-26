@@ -85,9 +85,6 @@ describe('handleMint', async () => {
                 };
             
         let newMockDb = mockDb.entities.Pool.set(pool);
-
-        // pass in empty whitelist to simplify this test. Doing so ignores the
-        // effect of getTrackedAmountUSD which we test separately.
         const trackedCollectedAmountUSD = ZERO_BD;
         newMockDb = await UniswapV3Pool.Collect.processEvent({ event: COLLECT_EVENT, mockDb: newMockDb });
 

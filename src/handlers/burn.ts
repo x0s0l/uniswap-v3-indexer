@@ -12,8 +12,8 @@ UniswapV3Pool.Burn.handlerWithLoader({
         if (!pool) return;
 
         // tick entities
-        const lowerTickId = `${event.srcAddress.toLowerCase()}#${event.params.tickLower}`;
-        const upperTickId = `${event.srcAddress.toLowerCase()}#${event.params.tickUpper}`;
+        const lowerTickId = `${poolId}#${event.params.tickLower}`;
+        const upperTickId = `${poolId}#${event.params.tickUpper}`;
 
         const res = await Promise.all([
             context.Bundle.get(event.chainId.toString()),
@@ -92,7 +92,7 @@ UniswapV3Pool.Burn.handlerWithLoader({
             token0_id: pool.token0_id,
             token1_id: pool.token1_id,
             owner: event.params.owner,
-            origin: event.transaction.from || '',
+            origin: event.transaction.from?.toLowerCase() || '',
             amount: event.params.amount,
             amount0: amount0,
             amount1: amount1,

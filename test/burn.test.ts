@@ -87,7 +87,7 @@ describe('handleBurn', async () => {
     const tuPrice0 = new BigDecimal('280203719.109703');
 
     const tickLower: Tick = {
-        id: `${USDC_WETH_03_MAINNET_POOL.toLowerCase()}#${BURN_FIXTURE.tickLower.toString()}`,
+        id: `${poolId}#${BURN_FIXTURE.tickLower.toString()}`,
         tickIdx: BURN_FIXTURE.tickLower,
         pool_id: poolId,
         poolAddress: USDC_WETH_03_MAINNET_POOL,
@@ -102,7 +102,7 @@ describe('handleBurn', async () => {
     mockDb = mockDb.entities.Tick.set(tickLower);
 
     const tickUpper: Tick = {
-        id: `${USDC_WETH_03_MAINNET_POOL.toLowerCase()}#${BURN_FIXTURE.tickUpper.toString()}`,
+        id: `${poolId}#${BURN_FIXTURE.tickUpper.toString()}`,
         tickIdx: BURN_FIXTURE.tickUpper,
         pool_id: poolId,
         poolAddress: USDC_WETH_03_MAINNET_POOL,
@@ -170,7 +170,7 @@ describe('handleBurn', async () => {
         assert.deepEqual(burn.token0_id, token0.id);
         assert.deepEqual(burn.token1_id, token1.id);
         assert.deepEqual(burn.owner, BURN_FIXTURE.owner);
-        assert.deepEqual(burn.origin, txFrom);
+        assert.deepEqual(burn.origin, txFrom.toLowerCase());
         assert.deepEqual(burn.amount, BURN_FIXTURE.amount);
         assert.deepEqual(burn.amount0.toString(), amountToken0.toString());
         assert.deepEqual(burn.amount1.toString(), amountToken1.toString());
@@ -180,13 +180,13 @@ describe('handleBurn', async () => {
         assert.deepEqual(burn.logIndex, logIndex);
 
         const tickLower: Tick = newMockDb.entities.Tick.get(
-            `${USDC_WETH_03_MAINNET_POOL.toLowerCase()}#${BURN_FIXTURE.tickLower.toString()}`
+            `${poolId}#${BURN_FIXTURE.tickLower.toString()}`
         );
         assert.deepEqual(tickLower.liquidityGross, -BURN_FIXTURE.amount);
         assert.deepEqual(tickLower.liquidityNet, -BURN_FIXTURE.amount);
 
         const tickUpper: Tick = newMockDb.entities.Tick.get(
-            `${USDC_WETH_03_MAINNET_POOL.toLowerCase()}#${BURN_FIXTURE.tickUpper.toString()}`
+            `${poolId}#${BURN_FIXTURE.tickUpper.toString()}`
         );
         assert.deepEqual(tickUpper.liquidityGross, -BURN_FIXTURE.amount);
         assert.deepEqual(tickUpper.liquidityNet, -BURN_FIXTURE.amount);

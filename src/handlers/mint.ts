@@ -14,8 +14,8 @@ UniswapV3Pool.Mint.handlerWithLoader({
 
         // tick entities
         const factoryId = `${event.chainId}-${factoryAddress.toLowerCase()}`;
-        const lowerTickId = `${event.srcAddress.toLowerCase()}#${event.params.tickLower}`;
-        const upperTickId = `${event.srcAddress.toLowerCase()}#${event.params.tickUpper}`;
+        const lowerTickId = `${poolId}#${event.params.tickLower}`;
+        const upperTickId = `${poolId}#${event.params.tickUpper}`;
 
         const res = await Promise.all([
             context.Bundle.get(event.chainId.toString()),
@@ -87,7 +87,6 @@ UniswapV3Pool.Mint.handlerWithLoader({
         ) {
             pool.liquidity = pool.liquidity + event.params.amount;
         }
-        console.log(pool.tick)
 
         pool.totalValueLockedToken0 = pool.totalValueLockedToken0.plus(amount0);
         pool.totalValueLockedToken1 = pool.totalValueLockedToken1.plus(amount1);
@@ -117,7 +116,7 @@ UniswapV3Pool.Mint.handlerWithLoader({
             token1_id: pool.token1_id,
             owner: event.params.owner,
             sender: event.params.sender,
-            origin: event.transaction.from || '',
+            origin: event.transaction.from?.toLowerCase() || '',
             amount: event.params.amount,
             amount0: amount0,
             amount1: amount1,
@@ -130,8 +129,8 @@ UniswapV3Pool.Mint.handlerWithLoader({
         // tick entities
         const lowerTickIdx = event.params.tickLower;
         const upperTickIdx = event.params.tickUpper;
-        const ltId = `${event.srcAddress.toLowerCase()}#${lowerTickIdx}`;
-        const utId = `${event.srcAddress.toLowerCase()}#${upperTickIdx}`;
+        const ltId = `${pool.id}#${lowerTickIdx}`;
+        const utId = `${pool.id}#${upperTickIdx}`;
         const amount = event.params.amount;
 
         const lowerTick = lowerTickRO ? { ...lowerTickRO } :
@@ -159,7 +158,7 @@ UniswapV3Pool.Mint.handlerWithLoader({
         lowerTick.liquidityGross = lowerTick.liquidityGross + amount;
         lowerTick.liquidityNet = lowerTick.liquidityNet + amount;
         upperTick.liquidityGross = upperTick.liquidityGross + amount;
-        upperTick.liquidityNet = upperTick.liquidityNet + amount;
+        upperTick.liquidityNet = upperTick.liquidityNet - amount;
 
         context.Tick.set(lowerTick);
         context.Tick.set(upperTick);
@@ -192,7 +191,6 @@ function createTick(
     blockNumber: number
 ): Tick {
     // 1.0001^tick is token1/token0.
-    console.log('tickIdx', tickIdx);
     const Price0 = fastExponentiation(new BigDecimal('1.0001'), tickIdx);
 
     return {

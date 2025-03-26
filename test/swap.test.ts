@@ -226,7 +226,7 @@ describe('handleSwap', async () => {
         assert.deepEqual(swap.token0_id, token0.id);
         assert.deepEqual(swap.token1_id, token1.id);
         assert.deepEqual(swap.sender, SWAP_FIXTURE.sender);
-        assert.deepEqual(swap.origin, txFrom);
+        assert.deepEqual(swap.origin, txFrom.toLowerCase());
         assert.deepEqual(swap.recipient, SWAP_FIXTURE.recipient);
         assert.deepEqual(swap.amount0.toString(), amount0.toString());
         assert.deepEqual(swap.amount1.toString(), amount1.toString());

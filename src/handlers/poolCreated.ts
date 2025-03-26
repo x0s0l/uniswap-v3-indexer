@@ -6,6 +6,7 @@ import {
 } from "generated";
 import { ZERO_BD, ZERO_BI, ONE_BI, ADDRESS_ZERO } from "./utils/constants";
 import { CHAIN_CONFIGS } from "./utils/chains";
+import { isAddressInList } from "./utils/index";
 import { getTokenMetadata } from "./utils/tokenMetadata";
 
 UniswapV3Factory.PoolCreated.contractRegister(({ event, context }) => {
@@ -31,7 +32,7 @@ UniswapV3Factory.PoolCreated.handlerWithLoader({
         } = CHAIN_CONFIGS[event.chainId];
 
         // temp fix
-        if (poolsToSkip.includes(event.params.pool)) {
+        if (isAddressInList(event.params.pool, poolsToSkip)) {
             return;
         }
 
@@ -132,10 +133,11 @@ UniswapV3Factory.PoolCreated.handlerWithLoader({
         };
 
         // update white listed pools
-        if (whitelistTokens.includes(tokens[0].id.split('-')[1])) {
+        if (isAddressInList(event.params.token0, whitelistTokens)) {
             tokens[1].whitelistPools.push(pool.id);
         }
-        if (whitelistTokens.includes(tokens[1].id.split('-')[1])) {
+
+        if (isAddressInList(event.params.token1, whitelistTokens)) {
             tokens[0].whitelistPools.push(pool.id);
         }
 

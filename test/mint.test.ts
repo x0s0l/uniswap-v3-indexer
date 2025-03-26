@@ -1,8 +1,7 @@
-// import { Mint } from '../src/types/templates/Pool/Pool'
 import assert from "assert";
-import { convertTokenToDecimal, fastExponentiation, safeDiv } from '../src/handlers/utils'
-import { ZERO_BD, ZERO_BI, ONE_BD, ADDRESS_ZERO } from '../src/handlers/utils/constants';
-import { TestHelpers, Pool, Bundle, BigDecimal, Token, Factory } from "generated";
+import { convertTokenToDecimal, fastExponentiation, safeDiv } from '../src/handlers/utils';
+import { ONE_BD } from '../src/handlers/utils/constants';
+import { TestHelpers, Pool, Bundle, BigDecimal, Mint, Token, Factory, Tick } from "generated";
 import {
     invokePoolCreatedWithMockedEthCalls,
     TEST_CONFIG,
@@ -18,6 +17,9 @@ import {
 } from './constants';
 
 const { MockDb, UniswapV3Pool } = TestHelpers;
+const logIndex = 1000;
+const txFrom = '0xa79d3B28A109F0E3E4919c9715748dB6D88f313f';
+const txHash = "0xd6005a794596212a1bdc19178e04e18eb8e9e0963d7073303bcb47d6186e757e";
 
 interface MintFixture {
     sender: string
@@ -38,7 +40,7 @@ const MINT_FIXTURE: MintFixture = {
     amount: 386405747494368n,
     amount0: 1000000000n,
     amount1: 66726312884609397n,
-}
+};
 
 const mintEvent = UniswapV3Pool.Mint.createMockEvent({
     sender: MINT_FIXTURE.sender,
@@ -51,11 +53,18 @@ const mintEvent = UniswapV3Pool.Mint.createMockEvent({
     mockEventData: {
         srcAddress: USDC_WETH_03_MAINNET_POOL,
         chainId,
-        block: { timestamp, number: blockNumber }
+        logIndex,
+        block: { timestamp, number: blockNumber },
+        transaction: {
+            gasPrice: 10000000n,
+            hash: txHash,
+            from: txFrom
+        }
     }
 });
 
 describe('handleMint', async () => {
+    const poolId = `${chainId}-${USDC_WETH_03_MAINNET_POOL.toLowerCase()}`;
     let mockDb = await invokePoolCreatedWithMockedEthCalls(TEST_CONFIG, MockDb.createMockDb());
 
     const bundle: Bundle = {
@@ -80,107 +89,116 @@ describe('handleMint', async () => {
     mockDb = mockDb.entities.Token.set(wethEntity);
 
     it('success - mint event, pool tick is between tickUpper and tickLower', async () => {
-        // // put the pools tick in range
-        // const poolId = `${chainId}-${USDC_WETH_03_MAINNET_POOL.toLowerCase()}`;
-        // const pool: Pool = {
-        //     ...mockDb.entities.Pool.get(poolId),
-        //     tick: BigInt(MINT_FIXTURE.tickLower + MINT_FIXTURE.tickUpper) / 2n
-        // };
+        // put the pools tick in range
+        const pool: Pool = {
+            ...mockDb.entities.Pool.get(poolId),
+            tick: BigInt(MINT_FIXTURE.tickLower + MINT_FIXTURE.tickUpper) / 2n
+        };
     
-        // let newMockdb = mockDb.entities.Pool.set(pool);
+        let newMockdb = mockDb.entities.Pool.set(pool);
 
-        // newMockdb = await UniswapV3Pool.Mint.processEvent({ event: mintEvent, mockDb: newMockdb });
+        newMockdb = await UniswapV3Pool.Mint.processEvent({ event: mintEvent, mockDb: newMockdb });
 
-        // const amountToken0 = convertTokenToDecimal(MINT_FIXTURE.amount0, BigInt(USDC_MAINNET_FIXTURE.decimals));
-        // const amountToken1 = convertTokenToDecimal(MINT_FIXTURE.amount1, BigInt(WETH_MAINNET_FIXTURE.decimals));
-        // const poolTotalValueLockedETH = amountToken0
-        //                                 .times(TEST_USDC_DERIVED_ETH)
-        //                                 .plus(amountToken1.times(TEST_WETH_DERIVED_ETH));
-        // const poolTotalValueLockedUSD = poolTotalValueLockedETH.times(TEST_ETH_PRICE_USD);
+        const amountToken0 = convertTokenToDecimal(MINT_FIXTURE.amount0, BigInt(USDC_MAINNET_FIXTURE.decimals));
+        const amountToken1 = convertTokenToDecimal(MINT_FIXTURE.amount1, BigInt(WETH_MAINNET_FIXTURE.decimals));
+        const poolTotalValueLockedETH = amountToken0
+                                        .times(TEST_USDC_DERIVED_ETH)
+                                        .plus(amountToken1.times(TEST_WETH_DERIVED_ETH));
+        const poolTotalValueLockedUSD = poolTotalValueLockedETH.times(TEST_ETH_PRICE_USD);
 
-        // const factory: Factory = newMockdb.entities.Factory.get(
-        //     `${chainId}-${TEST_CONFIG.factoryAddress.toLowerCase()}`
-        // );
+        const factory: Factory = newMockdb.entities.Factory.get(
+            `${chainId}-${TEST_CONFIG.factoryAddress.toLowerCase()}`
+        );
 
-        // assert.deepEqual(factory.txCount, 1n);
-        // assert.deepEqual(factory.totalValueLockedETH, poolTotalValueLockedETH);
-        // assert.deepEqual(factory.totalValueLockedUSD, poolTotalValueLockedUSD);
+        assert.deepEqual(factory.txCount, 1n);
+        assert.deepEqual(factory.totalValueLockedETH, poolTotalValueLockedETH);
+        assert.deepEqual(factory.totalValueLockedUSD, poolTotalValueLockedUSD);
 
-        // const actualPool: Pool = newMockdb.entities.Pool.get(poolId);
-        // assert.deepEqual(actualPool.txCount, 1n);
-        // assert.deepEqual(actualPool.liquidity, MINT_FIXTURE.amount);
-        // assert.deepEqual(actualPool.totalValueLockedToken0, amountToken0);
-        // assert.deepEqual(actualPool.totalValueLockedToken1, amountToken1);
-        // assert.deepEqual(actualPool.totalValueLockedETH, poolTotalValueLockedETH);
-        // assert.deepEqual(actualPool.totalValueLockedUSD, poolTotalValueLockedUSD);
+        const actualPool: Pool = newMockdb.entities.Pool.get(poolId);
+        assert.deepEqual(actualPool.txCount, 1n);
+        assert.deepEqual(actualPool.liquidity, MINT_FIXTURE.amount);
+        assert.deepEqual(actualPool.totalValueLockedToken0, amountToken0);
+        assert.deepEqual(actualPool.totalValueLockedToken1, amountToken1);
+        assert.deepEqual(actualPool.totalValueLockedETH, poolTotalValueLockedETH);
+        assert.deepEqual(actualPool.totalValueLockedUSD, poolTotalValueLockedUSD);
 
-        // assertObjectMatches('Token', USDC_MAINNET_FIXTURE.address, [
-        //     ['txCount', '1'],
-        //     ['totalValueLocked', amountToken0.toString()],
-        //     ['totalValueLockedUSD', amountToken0.times(TEST_USDC_DERIVED_ETH.times(TEST_ETH_PRICE_USD)).toString()],
-        // ])
+        const token0Id = `${chainId}-${USDC_MAINNET_FIXTURE.address.toLowerCase()}`;
+        const token0: Token = newMockdb.entities.Token.get(token0Id);
+        assert.deepEqual(token0.txCount, 1n);
+        assert.deepEqual(token0.totalValueLocked.toString(), amountToken0.toString());
+        assert.deepEqual(
+            token0.totalValueLockedUSD.toString(),
+            amountToken0.times(TEST_USDC_DERIVED_ETH.times(TEST_ETH_PRICE_USD)).toString()
+        );
 
-        // assertObjectMatches('Token', WETH_MAINNET_FIXTURE.address, [
-        //     ['txCount', '1'],
-        //     ['totalValueLocked', amountToken1.toString()],
-        //     ['totalValueLockedUSD', amountToken1.times(TEST_WETH_DERIVED_ETH.times(TEST_ETH_PRICE_USD)).toString()],
-        // ])
+        const token1Id = `${chainId}-${WETH_MAINNET_FIXTURE.address.toLowerCase()}`;
+        const token1: Token = newMockdb.entities.Token.get(token1Id);
+        assert.deepEqual(token1.txCount, 1n);
+        assert.deepEqual(token1.totalValueLocked.toString(), amountToken1.toString());
+        assert.deepEqual(
+            token1.totalValueLockedUSD.toString(),
+            amountToken1.times(TEST_WETH_DERIVED_ETH.times(TEST_ETH_PRICE_USD)).toString()
+        );
 
-        // assertObjectMatches('Mint', MOCK_EVENT.transaction.hash.toHexString() + '-' + MOCK_EVENT.logIndex.toString(), [
-        //     ['transaction', MOCK_EVENT.transaction.hash.toHexString()],
-        //     ['timestamp', MOCK_EVENT.block.timestamp.toString()],
-        //     ['pool', USDC_WETH_03_MAINNET_POOL],
-        //     ['token0', USDC_MAINNET_FIXTURE.address],
-        //     ['token1', WETH_MAINNET_FIXTURE.address],
-        //     ['owner', MINT_FIXTURE.owner.toHexString()],
-        //     ['sender', MINT_FIXTURE.sender.toHexString()],
-        //     ['origin', MOCK_EVENT.transaction.from.toHexString()],
-        //     ['amount', MINT_FIXTURE.amount.toString()],
-        //     ['amount0', amountToken0.toString()],
-        //     ['amount1', amountToken1.toString()],
-        //     ['amountUSD', poolTotalValueLockedUSD.toString()],
-        //     ['tickUpper', MINT_FIXTURE.tickUpper.toString()],
-        //     ['tickLower', MINT_FIXTURE.tickLower.toString()],
-        //     ['logIndex', MOCK_EVENT.logIndex.toString()],
-        // ])
+        const mintId = `${txHash}-${logIndex}`;
+        const mint: Mint = newMockdb.entities.Mint.get(mintId);
+        assert.deepEqual(mint.transaction_id, txHash);
+        assert.deepEqual(mint.timestamp, timestamp);
+        assert.deepEqual(mint.pool_id, poolId);
+        assert.deepEqual(mint.token0_id, token0Id);
+        assert.deepEqual(mint.token1_id, token1Id);
+        assert.deepEqual(mint.owner, MINT_FIXTURE.owner.toLowerCase());
+        assert.deepEqual(mint.sender, MINT_FIXTURE.sender.toLowerCase());
+        assert.deepEqual(mint.origin, txFrom.toLowerCase());
+        assert.deepEqual(mint.amount, MINT_FIXTURE.amount);
+        assert.deepEqual(mint.amount0.toString(), amountToken0.toString());
+        assert.deepEqual(mint.amount1.toString(), amountToken1.toString());
+        assert.deepEqual(mint.amountUSD?.toString(), poolTotalValueLockedUSD.toString());
+        assert.deepEqual(mint.tickLower, MINT_FIXTURE.tickLower);
+        assert.deepEqual(mint.tickUpper, MINT_FIXTURE.tickUpper);
+        assert.deepEqual(mint.logIndex, logIndex);
 
-        // const lowerTickPrice = fastExponentiation(BigDecimal.fromString('1.0001'), MINT_FIXTURE.tickLower)
-        // assertObjectMatches('Tick', USDC_WETH_03_MAINNET_POOL + '#' + MINT_FIXTURE.tickLower.toString(), [
-        //     ['tickIdx', MINT_FIXTURE.tickLower.toString()],
-        //     ['pool', USDC_WETH_03_MAINNET_POOL],
-        //     ['poolAddress', USDC_WETH_03_MAINNET_POOL],
-        //     ['createdAtTimestamp', MOCK_EVENT.block.timestamp.toString()],
-        //     ['createdAtBlockNumber', MOCK_EVENT.block.number.toString()],
-        //     ['liquidityGross', MINT_FIXTURE.amount.toString()],
-        //     ['liquidityNet', MINT_FIXTURE.amount.toString()],
-        //     ['price0', lowerTickPrice.toString()],
-        //     ['price1', safeDiv(ONE_BD, lowerTickPrice).toString()],
-        // ])
+        const lowerTickId = `${poolId}#${MINT_FIXTURE.tickLower.toString()}`;
+        const lowerTick: Tick = newMockdb.entities.Tick.get(lowerTickId);
+        const lowerTickPrice = fastExponentiation(new BigDecimal('1.0001'), MINT_FIXTURE.tickLower);
+        assert.deepEqual(lowerTick.tickIdx, MINT_FIXTURE.tickLower);
+        assert.deepEqual(lowerTick.pool_id, poolId);
+        assert.deepEqual(lowerTick.poolAddress, poolId);
+        assert.deepEqual(lowerTick.createdAtTimestamp, BigInt(timestamp));
+        assert.deepEqual(lowerTick.createdAtBlockNumber, BigInt(blockNumber));
+        assert.deepEqual(lowerTick.liquidityGross, MINT_FIXTURE.amount);
+        assert.deepEqual(lowerTick.liquidityNet, MINT_FIXTURE.amount);
+        assert.deepEqual(lowerTick.price0.toString(), lowerTickPrice.toString());
+        assert.deepEqual(lowerTick.price1.toString(), safeDiv(ONE_BD, lowerTickPrice).toString());
 
-        // const upperTickPrice = fastExponentiation(BigDecimal.fromString('1.0001'), MINT_FIXTURE.tickUpper)
-        // assertObjectMatches('Tick', USDC_WETH_03_MAINNET_POOL + '#' + MINT_FIXTURE.tickUpper.toString(), [
-        //     ['tickIdx', MINT_FIXTURE.tickUpper.toString()],
-        //     ['pool', USDC_WETH_03_MAINNET_POOL],
-        //     ['poolAddress', USDC_WETH_03_MAINNET_POOL],
-        //     ['createdAtTimestamp', MOCK_EVENT.block.timestamp.toString()],
-        //     ['createdAtBlockNumber', MOCK_EVENT.block.number.toString()],
-        //     ['liquidityGross', MINT_FIXTURE.amount.toString()],
-        //     ['liquidityNet', MINT_FIXTURE.amount.neg().toString()],
-        //     ['price0', upperTickPrice.toString()],
-        //     ['price1', safeDiv(ONE_BD, upperTickPrice).toString()],
-        // ])
+        const upperTickId = `${poolId}#${MINT_FIXTURE.tickUpper.toString()}`;
+        const upperTick: Tick = newMockdb.entities.Tick.get(upperTickId);
+        const upperTickPrice = fastExponentiation(new BigDecimal('1.0001'), MINT_FIXTURE.tickUpper);
+        assert.deepEqual(upperTick.tickIdx, MINT_FIXTURE.tickUpper);
+        assert.deepEqual(upperTick.pool_id, poolId);
+        assert.deepEqual(upperTick.poolAddress, poolId);
+        assert.deepEqual(upperTick.createdAtTimestamp, BigInt(timestamp));
+        assert.deepEqual(upperTick.createdAtBlockNumber, BigInt(blockNumber));
+        assert.deepEqual(upperTick.liquidityGross, MINT_FIXTURE.amount);
+        assert.deepEqual(upperTick.liquidityNet, -MINT_FIXTURE.amount);
+        assert.deepEqual(upperTick.price0.toString(), upperTickPrice.toString());
+        assert.deepEqual(upperTick.price1.toString(), safeDiv(ONE_BD, upperTickPrice).toString());
     });
 
-    // it('success - mint event, pool tick is not between tickUpper and tickLower', () => {
-    //     // put the pools tick out of range
-    //     const pool = Pool.load(USDC_WETH_03_MAINNET_POOL)!
-    //     pool.tick = BigInt.fromI32(MINT_FIXTURE.tickLower - 1)
-    //     const liquidityBeforeMint = pool.liquidity
-    //     pool.save()
+    it('success - mint event, pool tick is not between tickUpper and tickLower', async () => {
+        // put the pools tick out of range
+        let pool: Pool = {
+            ...mockDb.entities.Pool.get(poolId),
+            tick: MINT_FIXTURE.tickLower - 1n
+        };
 
-    //     handleMintHelper(MINT_EVENT, TEST_CONFIG)
+        let newMockDb = mockDb.entities.Pool.set(pool);
+        const liquidityBeforeMint = pool.liquidity;
 
-    //     // liquidity should not be updated
-    //     assertObjectMatches('Pool', USDC_WETH_03_MAINNET_POOL, [['liquidity', liquidityBeforeMint.toString()]])
-    // });
+        newMockDb = await UniswapV3Pool.Mint.processEvent({ event: mintEvent, mockDb: newMockDb });
+        pool = newMockDb.entities.Pool.get(poolId);
+
+        // liquidity should not be updated
+        assert.deepEqual(pool.liquidity, liquidityBeforeMint);
+    });
 });

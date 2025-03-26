@@ -195,7 +195,7 @@ UniswapV3Pool.Swap.handlerWithLoader({
             token0_id: pool.token0_id,
             token1_id: pool.token1_id,
             sender: event.params.sender,
-            origin: event.transaction.from || '',
+            origin: event.transaction.from?.toLowerCase() || '',
             recipient: event.params.recipient,
             amount0: amount0,
             amount1: amount1,
