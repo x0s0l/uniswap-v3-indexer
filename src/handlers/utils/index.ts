@@ -40,7 +40,7 @@ export function hexToBigInt(hex: string): bigint {
  * (see https://en.wikipedia.org/wiki/Exponentiation_by_squaring )
  * to minimize the number of BigDecimal operations and their impact on performance.
  */
-export function fastExponentiation(
+export function _fastExponentiation(
     value: BigDecimal,
     power: bigint
 ): BigDecimal {
@@ -72,13 +72,13 @@ export function fastExponentiation(
 }
 
 // For fast testing. Not to be used in production.
-// export function fastExponentiation(
-//     value: BigDecimal,
-//     power: bigint
-// ): BigDecimal {
-//     const res = parseFloat(value.toString()) ** parseInt(power.toString());
-//     return new BigDecimal(res.toString());
-// }
+export function fastExponentiation(
+    value: BigDecimal,
+    power: bigint
+): BigDecimal {
+    const res = parseFloat(value.toString()) ** parseInt(power.toString());
+    return new BigDecimal(res.toString());
+}
 
 export const NULL_ETH_HEX_STRING =
     "0x0000000000000000000000000000000000000000000000000000000000000001";
