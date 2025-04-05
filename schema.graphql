@@ -43,7 +43,7 @@ type Token {
   # token name
   name: String!
   # token decimals
-  decimals: BigInt!
+  decimals: BigInt! @config(precision: 78)
   # volume in token units
   volume: BigDecimal!
   # volume in derived USD
