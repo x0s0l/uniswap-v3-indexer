@@ -151,6 +151,6 @@ describe('fetchTokenSymbol', () => {
     it('success - fetch token symbol', async () => {
         const usdcAddress = USDC_MAINNET_FIXTURE.address;
         const metadata = await getTokenMetadata(usdcAddress, chainId);
-        assert.deepEqual(metadata, { name: 'USD Coin', symbol: 'USDC', decimals: 6 });
+        assert.deepEqual(metadata, { name: 'USD Coin', symbol: 'USDC', decimals: 6n });
     });
 });

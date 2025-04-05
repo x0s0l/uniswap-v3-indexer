@@ -282,11 +282,10 @@ export const CHAIN_CONFIGS: { [chainId: number]: ChainConfig } = {
   [ChainId.AVALANCHE]: {
     factoryAddress: "0x740b1c1de25031c31ff4fc9a62f554a55cdc1bad",
     poolManagerAddress: "0x06380c0e0912312b5150364b9dc4542ba0dbbc85",
-    stablecoinWrappedNativePoolId:
-      "0xd7a8035ddd9ec1dba25e3b27b685927fe63d65281f21c1c1d21d122fc48caeb7",
+    stablecoinWrappedNativePoolId: "0xfae3f424a0a47706811521e3ee268f00cfb5c45e",
     stablecoinIsToken0: false,
     wrappedNativeAddress: "0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7", // WAVAX
-    minimumNativeLocked: new BigDecimal("100"),
+    minimumNativeLocked: new BigDecimal("1000"),
     stablecoinAddresses: [
       "0xd586e7f844cea2f87f50152665bcbc2c279d8d70", // DAI.e
       "0xba7deebbfc5fa1100fb055a87773e1e99cd3507a", // DAI
@@ -304,7 +303,7 @@ export const CHAIN_CONFIGS: { [chainId: number]: ChainConfig } = {
       "0xc7198437980c041c805a1edcba50c1ce5db95118", // USDT.e
       "0x9702230a8ea53601f5cd2dc00fdbc13d4df4a8c7", // USDT
       "0x130966628846bfd36ff31a822705796e8cb8c18d", // MIM
-      "0x0000000000000000000000000000000000000000", // Native AVAX
+      // "0x0000000000000000000000000000000000000000", // Native AVAX
     ],
     tokenOverrides: [],
     poolsToSkip: [],

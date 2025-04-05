@@ -46,7 +46,7 @@ const ERC20_ABI = [
 ] as const;
 
 // Create .cache directory if it doesn't exist
-const CACHE_DIR = join(__dirname, "../../.cache");
+const CACHE_DIR = join(__dirname, "../../../.cache");
 if (!existsSync(CACHE_DIR)) {
   mkdirSync(CACHE_DIR, { recursive: true });
 }
@@ -59,7 +59,7 @@ const getCachePath = (chainId: number): string => {
 interface TokenMetadata {
   name: string;
   symbol: string;
-  decimals: number;
+  decimals: bigint;
 }
 
 const getRpcUrl = (chainId: number): string => {
@@ -165,31 +165,32 @@ export async function getTokenMetadata(
   const chainConfig = CHAIN_CONFIGS[chainId];
 
   // Handle native token
-  if (address.toLowerCase() === ADDRESS_ZERO.toLowerCase()) {
+  if (address === ADDRESS_ZERO) {
     return {
       name: chainConfig.nativeTokenDetails.name,
       symbol: chainConfig.nativeTokenDetails.symbol,
-      decimals: Number(chainConfig.nativeTokenDetails.decimals),
+      decimals: chainConfig.nativeTokenDetails.decimals,
     };
   }
 
+  address = address.toLowerCase();
+
   // Check for token overrides in chain config
   const tokenOverride = chainConfig.tokenOverrides.find(
-    (t) => t.address.toLowerCase() === address.toLowerCase()
+    (t) => t.address.toLowerCase() === address
   );
 
   if (tokenOverride) {
     return {
       name: tokenOverride.name,
       symbol: tokenOverride.symbol,
-      decimals: Number(tokenOverride.decimals),
+      decimals: tokenOverride.decimals,
     };
   }
 
   // Check cache
-  const normalizedAddress = address;
-  if (metadataCache[normalizedAddress]) {
-    return metadataCache[normalizedAddress];
+  if (metadataCache[address]) {
+    return metadataCache[address];
   }
 
   try {
@@ -197,7 +198,7 @@ export async function getTokenMetadata(
     const metadata = await fetchTokenMetadataMulticall(address, chainId);
 
     // Update cache
-    metadataCache[normalizedAddress] = metadata;
+    metadataCache[address] = metadata;
     saveCache(chainId);
 
     return metadata;
@@ -278,6 +279,6 @@ async function fetchTokenMetadataMulticall(
   return {
     name: name || "unknown",
     symbol: symbol || "UNKNOWN",
-    decimals: typeof decimalsResult === "number" ? decimalsResult : 18
+    decimals: typeof decimalsResult === "number" ? BigInt(decimalsResult) : 18n
   };
 }
