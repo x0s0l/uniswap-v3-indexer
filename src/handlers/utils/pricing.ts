@@ -19,7 +19,7 @@ export function sqrtPriceX96ToTokenPrices(
   const num = new BigDecimal((sqrtPriceX96 * sqrtPriceX96).toString());
   const denom = new BigDecimal(Q192.toString());
   const price1 = exponentToBigDecimal(token0Decimals).times(num)
-                .div(exponentToBigDecimal(token1Decimals).times(denom));
+                .div(exponentToBigDecimal(token1Decimals).times(denom)).dp(4);
   const price0 = safeDiv(new BigDecimal("1"), price1);
   return [price0, price1];
 }

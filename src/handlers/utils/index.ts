@@ -86,7 +86,7 @@ export function convertTokenToDecimal(
 ): BigDecimal {
     const val = new BigDecimal(tokenAmount.toString());
     return (exchangeDecimals === ZERO_BI) ? val :
-            val.div(exponentToBigDecimal(exchangeDecimals)).dp(10);
+            val.div(exponentToBigDecimal(exchangeDecimals)).dp(4);
 }
 
 export async function loadTransaction(
