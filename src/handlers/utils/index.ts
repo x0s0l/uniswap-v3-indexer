@@ -28,13 +28,6 @@ export function safeDiv(amount0: BigDecimal, amount1: BigDecimal): BigDecimal {
     return amount1.eq(ZERO_BD) ? ZERO_BD : amount0.div(amount1);
 }
 
-export function hexToBigInt(hex: string): bigint {
-    if (hex.startsWith("0x")) {
-        hex = hex.slice(2);
-    }
-    return BigInt(`0x${hex}`);
-}
-
 /**
  * Implements exponentiation by squaring
  * (see https://en.wikipedia.org/wiki/Exponentiation_by_squaring )
@@ -91,12 +84,9 @@ export function convertTokenToDecimal(
     tokenAmount: bigint,
     exchangeDecimals: bigint
 ): BigDecimal {
-    if (exchangeDecimals === ZERO_BI) {
-        return new BigDecimal(tokenAmount.toString());
-    }
-    return new BigDecimal(tokenAmount.toString()).div(
-        exponentToBigDecimal(exchangeDecimals)
-    );
+    const val = new BigDecimal(tokenAmount.toString());
+    return (exchangeDecimals === ZERO_BI) ? val :
+            val.div(exponentToBigDecimal(exchangeDecimals)).dp(10);
 }
 
 export async function loadTransaction(
