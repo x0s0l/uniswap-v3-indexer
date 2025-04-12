@@ -5,6 +5,8 @@ type Factory {
   poolCount: BigInt!
   # amoutn of transactions all time
   txCount: BigInt!
+  # total number of swaps across all the pools
+  numberOfSwaps: BigInt!
   # total volume all time in derived USD
   totalVolumeUSD: BigDecimal!
   # total volume all time in derived ETH
@@ -43,7 +45,7 @@ type Token {
   # token name
   name: String!
   # token decimals
-  decimals: BigInt! @config(precision: 78)
+  decimals: BigInt! @config(precision: 78) @index
   # volume in token units
   volume: BigDecimal!
   # volume in derived USD
@@ -55,7 +57,7 @@ type Token {
   # transactions across all pools that include this token
   txCount: BigInt!
   # number of pools containing this token
-  poolCount: BigInt!
+  poolCount: BigInt! @index
   # liquidity across all pools in token units
   totalValueLocked: BigDecimal!
   # liquidity across all pools in derived USD
@@ -80,9 +82,9 @@ type Pool {
   # block pool was created at
   createdAtBlockNumber: BigInt!
   # token0
-  token0: Token!
+  token0: Token! @index
   # token1
-  token1: Token!
+  token1: Token! @index
   # fee amount
   feeTier: BigInt!
   # in range liquidity
@@ -143,11 +145,11 @@ type Tick {
   # format: <pool address>#<tick index>
   id: ID!
   # pool address
-  poolAddress: String
+  poolAddress: String @index
   # tick index
   tickIdx: BigInt!
   # pointer to pool
-  pool: Pool!
+  pool: Pool! @index
   # total liquidity pool has as tick lower or upper
   liquidityGross: BigInt!
   # how much liquidity changes when tick crossed
@@ -159,7 +161,7 @@ type Tick {
   # created time
   createdAtTimestamp: BigInt!
   # created block
-  createdAtBlockNumber: BigInt!
+  createdAtBlockNumber: BigInt! @index
 }
 
 type Transaction {
@@ -176,7 +178,6 @@ type Transaction {
   mints: [Mint!]! @derivedFrom(field: "transaction")
   burns: [Burn!]! @derivedFrom(field: "transaction")
   swaps: [Swap!]! @derivedFrom(field: "transaction")
-  flashed: [Flash!]! @derivedFrom(field: "transaction")
   collects: [Collect!]! @derivedFrom(field: "transaction")
 }
 
@@ -188,17 +189,17 @@ type Mint {
   # time of txn
   timestamp: BigInt!
   # pool position is within
-  pool: Pool!
+  pool: Pool! @index
   # allow indexing by tokens
-  token0: Token!
+  token0: Token! @index
   # allow indexing by tokens
-  token1: Token!
+  token1: Token! @index
   # owner of position where liquidity minted to
-  owner: Bytes!
+  owner: Bytes! @index
   # the address that minted the liquidity
-  sender: Bytes
+  sender: Bytes @index
   # txn origin
-  origin: Bytes! # the EOA that initiated the txn
+  origin: Bytes! @index # the EOA that initiated the txn
   # amount of liquidity minted
   amount: BigInt!
   # amount of token 0 minted
@@ -221,17 +222,17 @@ type Burn {
   # txn burn was included in
   transaction: Transaction!
   # pool position is within
-  pool: Pool!
+  pool: Pool! @index
   # allow indexing by tokens
-  token0: Token!
+  token0: Token! @index
   # allow indexing by tokens
-  token1: Token!
+  token1: Token! @index
   # need this to pull recent txns for specific token or pool
   timestamp: BigInt!
   # owner of position where liquidity was burned
-  owner: Bytes
+  owner: Bytes @index
   # txn origin
-  origin: Bytes! # the EOA that initiated the txn
+  origin: Bytes! @index # the EOA that initiated the txn
   # amouny of liquidity burned
   amount: BigInt!
   # amount of token 0 burned
@@ -256,17 +257,17 @@ type Swap {
   # timestamp of transaction
   timestamp: BigInt!
   # pool swap occured within
-  pool: Pool!
+  pool: Pool! @index
   # allow indexing by tokens
-  token0: Token!
+  token0: Token! @index
   # allow indexing by tokens
-  token1: Token!
+  token1: Token! @index
   # sender of the swap
-  sender: Bytes!
+  sender: Bytes! @index
   # recipient of the swap
-  recipient: Bytes!
+  recipient: Bytes! @index
   # txn origin
-  origin: Bytes! # the EOA that initiated the txn
+  origin: Bytes! @index # the EOA that initiated the txn
   # delta of token0 swapped
   amount0: BigDecimal!
   # delta of token1 swapped
@@ -289,9 +290,9 @@ type Collect {
   # timestamp of event
   timestamp: BigInt!
   # pool collect occured within
-  pool: Pool!
+  pool: Pool! @index
   # owner of position collect was performed on
-  owner: Bytes
+  owner: Bytes @index
   # amount of token0 collected
   amount0: BigDecimal!
   # amount of token1 collected
@@ -306,39 +307,12 @@ type Collect {
   logIndex: BigInt
 }
 
-type Flash {
-  # transaction hash + "-" + index in collect Transaction array
-  id: ID!
-  # pointer to txn
-  transaction: Transaction!
-  # timestamp of event
-  timestamp: BigInt!
-  # pool collect occured within
-  pool: Pool!
-  # sender of the flash
-  sender: Bytes!
-  # recipient of the flash
-  recipient: Bytes!
-  # amount of token0 flashed
-  amount0: BigDecimal!
-  # amount of token1 flashed
-  amount1: BigDecimal!
-  # derived amount based on available prices of tokens
-  amountUSD: BigDecimal!
-  # amount token0 paid for flash
-  amount0Paid: BigDecimal!
-  # amount token1 paid for flash
-  amount1Paid: BigDecimal!
-  # index within the txn
-  logIndex: BigInt
-}
-
 # Data accumulated and condensed into day stats for all of Uniswap
 type UniswapDayData {
   # timestamp rounded to current day by dividing by 86400
   id: ID!
   # timestamp rounded to current day by dividing by 86400
-  date: Int!
+  date: Int! @index
   # total daily volume in Uniswap derived in terms of ETH
   volumeETH: BigDecimal!
   # total daily volume in Uniswap derived in terms of USD
@@ -358,9 +332,9 @@ type PoolDayData {
   # timestamp rounded to current day by dividing by 86400
   id: ID!
   # timestamp rounded to current day by dividing by 86400
-  date: Int!
+  date: Int! @index
   # pointer to pool
-  pool: Pool!
+  pool: Pool! @index
   # in range liquidity at end of period
   liquidity: BigInt!
   # current price tracker at end of period
@@ -400,7 +374,7 @@ type PoolHourData {
   # unix timestamp for start of hour
   periodStartUnix: Int!
   # pointer to pool
-  pool: Pool!
+  pool: Pool! @index
   # in range liquidity at end of period
   liquidity: BigInt!
   # current price tracker at end of period
@@ -437,9 +411,9 @@ type TokenDayData {
   # token address concatendated with date
   id: ID!
   # timestamp rounded to current day by dividing by 86400
-  date: Int!
+  date: Int! @index
   # pointer to token
-  token: Token!
+  token: Token! @index
   # volume in token units
   volume: BigDecimal!
   # volume in derived USD
@@ -470,7 +444,7 @@ type TokenHourData {
   # unix timestamp for start of hour
   periodStartUnix: Int!
   # pointer to token
-  token: Token!
+  token: Token! @index
   # volume in token units
   volume: BigDecimal!
   # volume in derived USD

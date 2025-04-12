@@ -62,32 +62,39 @@ interface TokenMetadata {
   decimals: bigint;
 }
 
-const getRpcUrl = (chainId: number): string => {
+const getRpcUrls = (chainId: number): string[] => {
   switch (chainId) {
     case 1:
-      return process.env.MAINNET_RPC_URL || "https://eth.drpc.org";
+      return [
+        'https://eth.drpc.org',
+        'https://rpc.mevblocker.io/fast',
+        'https://rpc.mevblocker.io',
+        'https://1rpc.io/eth',
+        'https://ethereum-rpc.publicnode.com'
+      ];
+
     case 42161:
-      return process.env.ARBITRUM_RPC_URL || "https://arbitrum.drpc.org";
+      return [process.env.ARBITRUM_RPC_URL || "https://arbitrum.drpc.org"];
     case 10:
-      return process.env.OPTIMISM_RPC_URL || "https://optimism.drpc.org";
+      return [process.env.OPTIMISM_RPC_URL || "https://optimism.drpc.org"];
     case 8453:
-      return process.env.BASE_RPC_URL || "https://base.drpc.org";
+      return [process.env.BASE_RPC_URL || "https://base.drpc.org"];
     case 137:
-      return process.env.POLYGON_RPC_URL || "https://polygon.drpc.org";
+      return [process.env.POLYGON_RPC_URL || "https://polygon.drpc.org"];
     case 43114:
-      return process.env.AVALANCHE_RPC_URL || "https://avalanche.drpc.org";
+      return [process.env.AVALANCHE_RPC_URL || "https://avalanche.drpc.org"];
     case 56:
-      return process.env.BSC_RPC_URL || "https://bsc.drpc.org";
+      return [process.env.BSC_RPC_URL || "https://bsc.drpc.org"];
     case 81457:
-      return process.env.BLAST_RPC_URL || "https://blast.drpc.org";
+      return [process.env.BLAST_RPC_URL || "https://blast.drpc.org"];
     case 7777777:
-      return process.env.ZORA_RPC_URL || "https://zora.drpc.org";
+      return [process.env.ZORA_RPC_URL || "https://zora.drpc.org"];
     case 1868:
-      return process.env.SONIEUM_RPC_URL || "https://sonieum.drpc.org";
+      return [process.env.SONIEUM_RPC_URL || "https://sonieum.drpc.org"];
     case 130:
-      return process.env.UNICHAIN_RPC_URL || "https://unichain.drpc.org";
+      return [process.env.UNICHAIN_RPC_URL || "https://unichain.drpc.org"];
     case 57073:
-      return process.env.INK_RPC_URL || "https://ink.drpc.org";
+      return [process.env.INK_RPC_URL || "https://ink.drpc.org"];
     // Add generic fallback for any chain
     default:
       throw new Error(`No RPC URL configured for chainId ${chainId}`);
@@ -95,27 +102,34 @@ const getRpcUrl = (chainId: number): string => {
 };
 
 // Cache of clients per chainId
-const clients: Record<number, PublicClient> = {};
+const clients: Record<string, PublicClient> = {};
 
 // Get client for a specific chain
-const getClient = (chainId: number): PublicClient => {
-  if (!clients[chainId]) {
+const getClient = (chainId: number, rpcUrl: string): PublicClient => {
+  const key = `${chainId}-${rpcUrl}`;
+
+  if (!clients[key]) {
     try {
       // Create a simpler client configuration
-      clients[chainId] = createPublicClient({
-        transport: http(getRpcUrl(chainId)),
+      clients[key] = createPublicClient({
+        transport: http(rpcUrl),
       });
-      console.log(`Created client for chain ${chainId}`);
+      console.log(`Created client for chain ${key}`);
     } catch (e) {
-      console.error(`Error creating client for chain ${chainId}:`, e);
+      console.error(`Error creating client for chain ${key}:`, e);
       throw e;
     }
   }
-  return clients[chainId];
+  return clients[key];
 };
 
 // Cache of metadata per chainId
 const metadataCaches: Record<number, Record<string, TokenMetadata>> = {};
+
+const bigIntReviver = (k: any, v: any) => (k === 'decimals') ? BigInt(v) : v;
+const bigIntReplacer = (_: any, v: any) => (typeof v === 'bigint') ? v.toString() : v;
+const metadataParser = (json: string) => JSON.parse(json, bigIntReviver);
+const metadataSerializer = (item: any) => JSON.stringify(item, bigIntReplacer, 2);
 
 // Load cache for a specific chain
 const loadCache = (chainId: number): Record<string, TokenMetadata> => {
@@ -123,7 +137,7 @@ const loadCache = (chainId: number): Record<string, TokenMetadata> => {
     const cachePath = getCachePath(chainId);
     if (existsSync(cachePath)) {
       try {
-        metadataCaches[chainId] = JSON.parse(readFileSync(cachePath, "utf8"));
+        metadataCaches[chainId] = metadataParser(readFileSync(cachePath, "utf8"));
       } catch (e) {
         console.error(
           `Error loading token metadata cache for chain ${chainId}:`,
@@ -142,7 +156,7 @@ const loadCache = (chainId: number): Record<string, TokenMetadata> => {
 const saveCache = (chainId: number): void => {
   const cachePath = getCachePath(chainId);
   try {
-    writeFileSync(cachePath, JSON.stringify(metadataCaches[chainId], null, 2));
+    writeFileSync(cachePath, metadataSerializer(metadataCaches[chainId]));
   } catch (e) {
     console.error(`Error saving token metadata cache for chain ${chainId}:`, e);
   }
@@ -211,74 +225,84 @@ export async function getTokenMetadata(
   }
 }
 
-// Update the fetchTokenMetadataMulticall function to sanitize name and symbol
 async function fetchTokenMetadataMulticall(
   address: string,
   chainId: number
 ): Promise<TokenMetadata> {
-  const contract = getContract({
-    address: address as `0x${string}`,
-    abi: ERC20_ABI,
-    client: getClient(chainId),
-  });
+  const rpcUrls = getRpcUrls(chainId);
+  let name, symbol, decimals;
 
-  // Prepare promises but don't await them yet
-  const namePromise = contract.read.name().catch(() => null);
-  const nameBytes32Promise = contract.read.NAME().catch(() => null);
-  const symbolPromise = contract.read.symbol().catch(() => null);
-  const symbolBytes32Promise = contract.read.SYMBOL().catch(() => null);
-  const decimalsPromise = contract.read.decimals().catch(() => 18); // Default to 18
+  for (const rpcUrl of rpcUrls) {
+    const contract = getContract({
+      address: address as `0x${string}`,
+      abi: ERC20_ABI,
+      client: getClient(chainId, rpcUrl),
+    });
 
-  // contract.read.
+    const promiseList = [];
 
-  // Execute all promises in a single multicall batch
-  const [
-    nameResult,
-    nameBytes32Result,
-    symbolResult,
-    symbolBytes32Result,
-    decimalsResult
-  ] = await Promise.all([
-    namePromise,
-    nameBytes32Promise,
-    symbolPromise,
-    symbolBytes32Promise,
-    decimalsPromise
-  ]);
+    if (name === undefined) {
+      const namePromise = contract.read.name()
+                          .then(val => {
+                            if (val === null) throw 'Result is null';
+                            name = sanitizeString(val);
+                          });
+  
+      const nameBytes32Promise = contract.read.NAME()
+                          .then(val => name = parseBytes32String(val));
+      
+      promiseList.push(Promise.any([namePromise, nameBytes32Promise]));
+    }
 
-  // Process name with fallbacks
-  let name = "unknown";
-  if (nameResult !== null) {
-    name = sanitizeString(nameResult);
-  } else if (nameBytes32Result !== null) {
-    name = sanitizeString(
-      new TextDecoder().decode(
-        new Uint8Array(
-          Buffer.from(nameBytes32Result.slice(2), "hex").filter((n) => n !== 0)
-        )
-      )
-    );
-  }
+    if (symbol === undefined) {
+      const symbolPromise = contract.read.symbol()
+                          .then(val => {
+                            if (val === null) throw 'Result is null';
+                            symbol = sanitizeString(val);
+                          });
+  
+      const symbolBytes32Promise = contract.read.SYMBOL()
+                          .then(val => symbol = parseBytes32String(val));
 
-  // Process symbol with fallbacks
-  let symbol = "UNKNOWN";
-  if (symbolResult !== null) {
-    symbol = sanitizeString(symbolResult);
-  } else if (symbolBytes32Result !== null) {
-    symbol = sanitizeString(
-      new TextDecoder().decode(
-        new Uint8Array(
-          Buffer.from(symbolBytes32Result.slice(2), "hex").filter(
-            (n) => n !== 0
-          )
-        )
-      )
-    );
+      promiseList.push(Promise.any([symbolPromise, symbolBytes32Promise]));
+    }
+
+    if (decimals === undefined) {
+      const decimalsPromise = contract.read.decimals()
+                          .then(val => {
+                            if (val === null) throw 'Result is null';
+                            decimals = val;
+                          });
+
+      promiseList.push(decimalsPromise);
+    }
+
+    try {
+      await Promise.all(promiseList);
+    } catch (err) {
+      console.log(err);
+    }
+
+    if (name !== undefined && symbol !== undefined && decimals !== undefined) {
+      break;
+    }
   }
 
   return {
-    name: name || "unknown",
-    symbol: symbol || "UNKNOWN",
-    decimals: typeof decimalsResult === "number" ? BigInt(decimalsResult) : 18n
+    name: name === undefined ? 'unknown' : name,
+    symbol: symbol === undefined ? 'UNKNOWN' : symbol,
+    decimals: typeof decimals === "number" ? BigInt(decimals) : 18n
   };
+}
+
+function parseBytes32String(bytes32String: string | null): string {
+  if (bytes32String === null) throw 'Result is null';
+
+  return sanitizeString(
+    new TextDecoder().decode(
+      new Uint8Array(
+        Buffer.from(bytes32String.slice(2), "hex").filter(n => n !== 0)
+      )
+    )
+  );
 }

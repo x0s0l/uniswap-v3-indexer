@@ -91,6 +91,7 @@ UniswapV3Pool.Swap.handlerWithLoader({
 
         // global updates
         factory.txCount = factory.txCount + ONE_BI;
+        factory.numberOfSwaps = factory.numberOfSwaps + ONE_BI;
         factory.totalVolumeETH = factory.totalVolumeETH.plus(amountTotalETHTracked);
         factory.totalVolumeUSD = factory.totalVolumeUSD.plus(amountTotalUSDTracked);
         factory.untrackedVolumeUSD = factory.untrackedVolumeUSD.plus(amountTotalUSDUntracked);

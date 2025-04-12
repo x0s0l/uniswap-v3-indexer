@@ -59,6 +59,7 @@ describe('handlePoolCreated', () => {
         const expectedFactory: Factory = {
             id: factoryId,
             poolCount: 1n,
+            numberOfSwaps: ZERO_BI,
             totalVolumeETH: ZERO_BD,
             totalVolumeUSD: ZERO_BD,
             untrackedVolumeUSD: ZERO_BD,

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es2020", //required for use with BigInt types
     "lib": [
-      "es2020"
+      "es2021"
     ],
     "allowJs": true,
     "checkJs": false,

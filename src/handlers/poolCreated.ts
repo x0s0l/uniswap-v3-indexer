@@ -45,6 +45,7 @@ UniswapV3Factory.PoolCreated.handlerWithLoader({
             factory = {
                 id: `${event.chainId}-${factoryAddress.toLowerCase()}`,
                 poolCount: ZERO_BI,
+                numberOfSwaps: ZERO_BI,
                 totalVolumeETH: ZERO_BD,
                 totalVolumeUSD: ZERO_BD,
                 untrackedVolumeUSD: ZERO_BD,
