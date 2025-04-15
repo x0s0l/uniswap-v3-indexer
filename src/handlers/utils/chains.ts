@@ -211,6 +211,7 @@ export const CHAIN_CONFIGS: { [chainId: number]: ChainConfig } = {
     minimumNativeLocked: new BigDecimal("4"),
     stablecoinAddresses: [
       "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", // USDC
+      "0x820C137fa70C8691f0e44Dc420a5e53c168921Dc" // USDS 
     ],
     whitelistTokens: [
       "0x4200000000000000000000000000000000000006", // WETH
