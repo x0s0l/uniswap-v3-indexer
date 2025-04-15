@@ -1,6 +1,7 @@
 import { TestHelpers, Pool, BigDecimal, Token } from 'generated';
 import { ChainConfig } from '../src/handlers/utils/chains';
 import { ZERO_BD, ZERO_BI } from '../src/handlers/utils/constants';
+import { isAddressInList } from '../src/handlers/utils/index';
 
 const { UniswapV3Factory } = TestHelpers;
 
@@ -17,7 +18,6 @@ export const blockNumber = 317209663;
 
 export const TEST_CONFIG: ChainConfig = {
     factoryAddress: FACTORY_ADDRESS,
-    poolManagerAddress: "0x360e68faccca8ca495c1b759fd9eee466db9fb32",
     stablecoinWrappedNativePoolId: USDC_WETH_03_MAINNET_POOL,
     stablecoinIsToken0: false,
     wrappedNativeAddress: WETH_MAINNET_ADDRESS,
@@ -48,7 +48,6 @@ export const TEST_CONFIG: ChainConfig = {
 
 export const TEST_CONFIG_WITH_NO_WHITELIST: ChainConfig = {
   factoryAddress: FACTORY_ADDRESS,
-  poolManagerAddress: "0x360e68faccca8ca495c1b759fd9eee466db9fb32",
   stablecoinWrappedNativePoolId: USDC_WETH_03_MAINNET_POOL,
   stablecoinIsToken0: true,
   wrappedNativeAddress: WETH_MAINNET_ADDRESS,
@@ -67,7 +66,6 @@ export const TEST_CONFIG_WITH_NO_WHITELIST: ChainConfig = {
 
 export const TEST_CONFIG_WITH_POOL_SKIPPED: ChainConfig = {
   factoryAddress: FACTORY_ADDRESS,
-  poolManagerAddress: "0x360e68faccca8ca495c1b759fd9eee466db9fb32",
   stablecoinWrappedNativePoolId: USDC_WETH_03_MAINNET_POOL,
   stablecoinIsToken0: true,
   wrappedNativeAddress: WETH_MAINNET_ADDRESS,
@@ -242,11 +240,14 @@ export const createAndStoreTestPool = (poolFixture: PoolFixture, chainId: number
 }
 
 export const createAndStoreTestToken = (tokenFixture: TokenFixture, chainId: number, mockDb: any): [Token, any] => {
+    const address = tokenFixture.address.toLowerCase();
+    const {whitelistTokens} = TEST_CONFIG;
     const token: Token = {
-        id: `${chainId}-${tokenFixture.address.toLowerCase()}`,
+        id: `${chainId}-${address}`,
         symbol: tokenFixture.symbol,
         name: tokenFixture.name,
         decimals: BigInt(tokenFixture.decimals),
+        isWhitelisted: isAddressInList(address, whitelistTokens),
         volume: ZERO_BD,
         volumeUSD: ZERO_BD,
         untrackedVolumeUSD: ZERO_BD,

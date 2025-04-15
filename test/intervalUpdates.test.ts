@@ -30,6 +30,7 @@ describe('uniswap interval data', () => {
     const factory: Factory = {
         id: factoryId,
         poolCount: ZERO_BI,
+        numberOfSwaps: ZERO_BI,
         totalVolumeUSD: ZERO_BD,
         totalVolumeETH: ZERO_BD,
         totalFeesUSD: ZERO_BD,
