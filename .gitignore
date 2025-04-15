@@ -21,14 +21,12 @@
 lib/*
 *.mlast
 *.mliast
-.cache
 .vscode
 .merlin
 .bsb.lock
 /node_modules/
 benchmarks/
 artifacts
-cache
 generated
 logs
 *.bs.js
