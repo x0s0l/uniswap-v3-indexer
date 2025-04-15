@@ -52,12 +52,12 @@ networks:
   - name: UniswapV3Factory
     address: 0x1F98431c8aD98523631AE4a59f267346ea31F984
   - name: UniswapV3Pool
-- id: 8453 # base
-  start_block: 0
-  contracts:
-  - name: UniswapV3Factory
-    address: 0x33128a8fc17869897dce68ed026d694621f6fdfd
-  - name: UniswapV3Pool
+# - id: 8453 # base
+#   start_block: 0
+#   contracts:
+#   - name: UniswapV3Factory
+#     address: 0x33128a8fc17869897dce68ed026d694621f6fdfd
+#   - name: UniswapV3Pool
 - id: 137 # polygon
   start_block: 0
   contracts:
