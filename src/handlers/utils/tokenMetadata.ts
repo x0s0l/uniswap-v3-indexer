@@ -64,15 +64,8 @@ interface TokenMetadata {
 
 const getRpcUrls = (chainId: number): string[] => {
   switch (chainId) {
-    case 1:
-      return [
-        'https://eth.drpc.org',
-        'https://rpc.mevblocker.io/fast',
-        'https://rpc.mevblocker.io',
-        'https://1rpc.io/eth',
-        'https://ethereum-rpc.publicnode.com'
-      ];
-
+    case 1:      
+      return [process.env.ETH_RPC_URL || "https://eth.drpc.org"];
     case 42161:
       return [process.env.ARBITRUM_RPC_URL || "https://arbitrum.drpc.org"];
     case 10:
