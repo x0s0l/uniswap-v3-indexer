@@ -82,12 +82,12 @@ networks:
   - name: UniswapV3Factory
     address: 0x792edade80af5fc680d96a2ed80a44247d2cf6fd
   - name: UniswapV3Pool
-- id: 7777777 # Zora
-  start_block: 0
-  contracts:
-  - name: UniswapV3Factory
-    address: 0x7145f8aeef1f6510e92164038e1b6f8cb2c42cbb
-  - name: UniswapV3Pool
+# - id: 7777777 # Zora
+#   start_block: 0
+#   contracts:
+#   - name: UniswapV3Factory
+#     address: 0x7145f8aeef1f6510e92164038e1b6f8cb2c42cbb
+#   - name: UniswapV3Pool
 # - id: 480 # World // don't have a hypersync instance for world chain
 #   start_block: 0
 #   contracts:
