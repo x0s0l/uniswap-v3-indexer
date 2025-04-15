@@ -46,6 +46,8 @@ type Token {
   name: String!
   # token decimals
   decimals: BigInt! @config(precision: 78) @index
+  # is token whitelisted?
+  isWhitelisted: Boolean!
   # volume in token units
   volume: BigDecimal!
   # volume in derived USD

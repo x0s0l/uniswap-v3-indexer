@@ -27,7 +27,6 @@ UniswapV3Factory.PoolCreated.handlerWithLoader({
     handler: async ({ event, context, loaderReturn }) => {
         const {
             factoryAddress,
-            whitelistTokens,
             poolsToSkip,
         } = CHAIN_CONFIGS[event.chainId];
 
@@ -66,9 +65,6 @@ UniswapV3Factory.PoolCreated.handlerWithLoader({
             };
 
             context.Bundle.set(bundle);
-
-            // Do we need this?
-            // populateEmptyPools(event, poolMappings, whitelistTokens, tokenOverrides);
         }
 
         factory.poolCount = factory.poolCount + ONE_BI;
@@ -134,16 +130,13 @@ UniswapV3Factory.PoolCreated.handlerWithLoader({
         };
 
         // update white listed pools
-        if (isAddressInList(event.params.token0, whitelistTokens)) {
+        if (tokens[0].isWhitelisted) {
             tokens[1].whitelistPools.push(pool.id);
         }
 
-        if (isAddressInList(event.params.token1, whitelistTokens)) {
+        if (tokens[1].isWhitelisted) {
             tokens[0].whitelistPools.push(pool.id);
         }
-
-        // What's this?
-        // PoolTemplate.create(event.params.pool);
 
         context.Pool.set(pool);
         context.Token.set(tokens[0]);
@@ -153,6 +146,7 @@ UniswapV3Factory.PoolCreated.handlerWithLoader({
 });
 
 async function getToken(id: string, chainId: number): Promise<Token> {
+    const { whitelistTokens } = CHAIN_CONFIGS[chainId];
     const tokenMetadata = await getTokenMetadata(id, chainId);
 
     return {
@@ -160,6 +154,7 @@ async function getToken(id: string, chainId: number): Promise<Token> {
         symbol: tokenMetadata.symbol,
         name: tokenMetadata.name,
         decimals: tokenMetadata.decimals,
+        isWhitelisted: isAddressInList(id, whitelistTokens),
         volume: ZERO_BD,
         volumeUSD: ZERO_BD,
         untrackedVolumeUSD: ZERO_BD,
