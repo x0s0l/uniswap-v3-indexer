@@ -1,0 +1,12 @@
+{
+  "0xf4794449f36ec226e8b30d2e227600d4431d7e23": {
+    "name": "FunnyCatCoin",
+    "symbol": "FCC",
+    "decimals": "18"
+  },
+  "0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7": {
+    "name": "Wrapped AVAX",
+    "symbol": "WAVAX",
+    "decimals": "18"
+  }
+}

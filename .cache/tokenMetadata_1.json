@@ -1,0 +1,262 @@
+{
+  "0x3f677b9c8afec2d51a382e3ac056b56098f3990c": {
+    "name": "here come dat boi!!!!!!",
+    "symbol": "dat boi",
+    "decimals": "18"
+  },
+  "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": {
+    "name": "Wrapped Ether",
+    "symbol": "WETH",
+    "decimals": "18"
+  },
+  "0xf9ca2b0c777e3b601459d141ec757424f00305cd": {
+    "name": "CANDY CRUSH",
+    "symbol": "CAN",
+    "decimals": "18"
+  },
+  "0xcc1016ba261d89003b9b4a547b50931a8b5bf79e": {
+    "name": "GHEY",
+    "symbol": "GHEY",
+    "decimals": "18"
+  },
+  "0x21d75e958f58c911c443c28a2efe67956fd934cd": {
+    "name": "Sweet_D",
+    "symbol": "SWD",
+    "decimals": "18"
+  },
+  "0x3b960e47784150f5a63777201ee2b15253d713e8": {
+    "name": "Crab Strategy v2",
+    "symbol": "Crabv2",
+    "decimals": "18"
+  },
+  "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": {
+    "name": "USD Coin",
+    "symbol": "USDC",
+    "decimals": "6"
+  },
+  "0xd2803d668b24e31c42217729095787c2a78a2db3": {
+    "name": "ADHD",
+    "symbol": "ADHD",
+    "decimals": "18"
+  },
+  "0x0e8d2d609e322e62607915e158d6267f361143b9": {
+    "name": "ETHPOSSIBLE",
+    "symbol": "POSSIBLE",
+    "decimals": "18"
+  },
+  "0x9657477ac915f56ca87c253db1320218ec2d5ddd": {
+    "name": "Jake Newman Enterprises",
+    "symbol": "JNE",
+    "decimals": "18"
+  },
+  "0x94be6962be41377d5beda8dfe1b100f3bf0eacf3": {
+    "name": "ᗪOᖇK ᒪOᖇᗪ",
+    "symbol": "DORKL",
+    "decimals": "18"
+  },
+  "0x4c9ed3a256d63e995e80892aac565bee13f9ba4d": {
+    "name": "BOOTY",
+    "symbol": "BOOTY",
+    "decimals": "18"
+  },
+  "0x9374e5930141a10a1e4b2e6b5d126a24d703150f": {
+    "name": "12K4",
+    "symbol": "12K4",
+    "decimals": "18"
+  },
+  "0x4b15aec318fe594ded8e1cad7b3bf770f2f4cadb": {
+    "name": "Only Possible On Ethereum",
+    "symbol": "OPOE",
+    "decimals": "18"
+  },
+  "0x7fb0214dba1664a6ae84f73e8a5706405bf1c36e": {
+    "name": "Gill",
+    "symbol": "GILL",
+    "decimals": "18"
+  },
+  "0x1142866f451d9d5281c5c8349a332bd338e552a1": {
+    "name": "SuperMarioPorsche911inu",
+    "symbol": "SILKROAD",
+    "decimals": "18"
+  },
+  "0x38a94e92a19e970c144ded0b2dd47278ca11cc1f": {
+    "name": "Falcon 9",
+    "symbol": "F9",
+    "decimals": "9"
+  },
+  "0xe64426b0af24ac9723046463a6f65980157672fa": {
+    "name": "Falcon Heavy",
+    "symbol": "wF9",
+    "decimals": "18"
+  },
+  "0x5e7bb62fab67e8c71920e04b83552c97d844ed23": {
+    "name": "HAUS Lifestyle Token",
+    "symbol": "HAUS",
+    "decimals": "18"
+  },
+  "0xdac17f958d2ee523a2206206994597c13d831ec7": {
+    "name": "Tether USD",
+    "symbol": "USDT",
+    "decimals": "6"
+  },
+  "0x1cbdfc778335d1760d8b8dbb6a8d014a5b049769": {
+    "name": "Pure Test Token 1",
+    "symbol": "PTT1",
+    "decimals": "18"
+  },
+  "0xa6a2348408559cff30cf7a67c356366ef75cbb2d": {
+    "name": "Test Event Token 1",
+    "symbol": "TET1",
+    "decimals": "18"
+  },
+  "0xa8a837e2bf0c37fef5c495951a0dfc33aaead57a": {
+    "name": "Uniswap V2",
+    "symbol": "UNI-V2",
+    "decimals": "18"
+  },
+  "0x32cd9dff7cd403deea70cb1532f372581e76c4f4": {
+    "name": "Wall Street Memes 2.0",
+    "symbol": "WSM2.0",
+    "decimals": "18"
+  },
+  "0xb62e45c3df611dce236a6ddc7a493d79f9dfadef": {
+    "name": "Wall Street Memes",
+    "symbol": "WSM",
+    "decimals": "18"
+  },
+  "0x4600430d900c2d8a372bf48d7b42897db5f462d1": {
+    "name": "CharlesMansonAlexJonesBeetlejuice1776Pitbull(karen)",
+    "symbol": "MONERO",
+    "decimals": "18"
+  },
+  "0xa500b88a6559d074b2198e528c33adf850108a28": {
+    "name": "LEGEND SHIT!",
+    "symbol": "LEGEND SHIT",
+    "decimals": "18"
+  },
+  "0x3423661f16bc2a122b7924527c2eb3a3016546c5": {
+    "name": "WallShitBets",
+    "symbol": "WSB",
+    "decimals": "18"
+  },
+  "0xd854efdac2076a596d0852f8a0d10a7297a70cf3": {
+    "name": "Legend Safe Tokens Bot",
+    "symbol": "LEGENDBOT",
+    "decimals": "18"
+  },
+  "0x5dbbb101cdc29443d12055ecdddd7ca037dce721": {
+    "name": "Ethereum Token",
+    "symbol": "ETH",
+    "decimals": "18"
+  },
+  "0x3564a13c1467184479b3fa32ccb17f61f6b83dc3": {
+    "name": "Raichu Thunderstone",
+    "symbol": "RAI",
+    "decimals": "18"
+  },
+  "0x1845966510f14e2f66b8b9568d36cc6dba4d6845": {
+    "name": "Metatron IX",
+    "symbol": "METAIX",
+    "decimals": "18"
+  },
+  "0x8848a716e0fff9f14b675d1d2b75a1a1222efb5a": {
+    "name": "OG STREET MEMES",
+    "symbol": "OSM",
+    "decimals": "9"
+  },
+  "0xe7589addd235affeaca91bf2b7903ebcc2f6ee4d": {
+    "name": "ScoobyDoo",
+    "symbol": "SCOOBY",
+    "decimals": "18"
+  },
+  "0x0fa88773fa86caa44d8061b242faa179eeb36a9e": {
+    "name": "Anti Illegal Immigration",
+    "symbol": "AII",
+    "decimals": "18"
+  },
+  "0xebdf7f7dfac29949b493d4d1c9f60648f29428a6": {
+    "name": "Polkastar",
+    "symbol": "POLKA",
+    "decimals": "18"
+  },
+  "0x82e509d5793e7c200991ceaa8382df8c5495839f": {
+    "name": "Bored Milady Boxers",
+    "symbol": "BMILLY",
+    "decimals": "18"
+  },
+  "0x55faabb5dd7e2b6a00ea5debc0807ed10a92ac3d": {
+    "name": "EZ-MOON",
+    "symbol": "EZM",
+    "decimals": "18"
+  },
+  "0xdae6d9662c4904026ac311a5fdc8917fdc51971a": {
+    "name": "Uniswap V2",
+    "symbol": "UNI-V2",
+    "decimals": "18"
+  },
+  "0x50b3e55a6b9efdf85032b289e6a00f58afdbdf86": {
+    "name": "Reddit",
+    "symbol": "REDDIT",
+    "decimals": "8"
+  },
+  "0xd4b05e11ef16b0ec07289e6d45528c25df28c1b2": {
+    "name": "Mi familia needs to eat Sir",
+    "symbol": "GIMMIMONEY",
+    "decimals": "18"
+  },
+  "0xd08078ea5d2f710badca3d0c54bbfd17c016fa30": {
+    "name": "super-moon",
+    "symbol": "SPM",
+    "decimals": "18"
+  },
+  "0xee60f266e02d8c7cf42752ade9f6a571d83ae394": {
+    "name": "Bitgold",
+    "symbol": "BGD",
+    "decimals": "18"
+  },
+  "0x1dd0390a2e94b94cec1459b72258b1d5cab242df": {
+    "name": "WALL STREET MOONS",
+    "symbol": "WSM",
+    "decimals": "18"
+  },
+  "0x020d5c27e80f90ec41462548039c8a77d7fe2ebf": {
+    "name": "Occupy WallStreet",
+    "symbol": "OWS",
+    "decimals": "18"
+  },
+  "0xa8517619f6e2549b030c51d11f03f036823d60d3": {
+    "name": "Pepecoin",
+    "symbol": "pep",
+    "decimals": "18"
+  },
+  "0x880b0627381d4df4c97c33b03b9f62489840e307": {
+    "name": "TEST1",
+    "symbol": "TEST",
+    "decimals": "18"
+  },
+  "0xcfa9cf927c5fce61b9d5842c7cd018fee888f869": {
+    "name": "Splinter",
+    "symbol": "TMNT",
+    "decimals": "18"
+  },
+  "0x3ef3b555842cdaff0f4f0b79c9dd65096d60ba63": {
+    "name": "CryptoPawCoin",
+    "symbol": "CPRC",
+    "decimals": "18"
+  },
+  "0x9b06f3c5de42d4623d7a2bd940ec735103c68a76": {
+    "name": "Volta Club",
+    "symbol": "Volta",
+    "decimals": "18"
+  },
+  "0x5b952385dd817a9eb989383eb54ac0429be1b904": {
+    "name": "PulseX LP from PulseChain",
+    "symbol": "PLP",
+    "decimals": "18"
+  },
+  "0x6b175474e89094c44da98b954eedeac495271d0f": {
+    "name": "Dai Stablecoin",
+    "symbol": "DAI",
+    "decimals": "18"
+  }
+}

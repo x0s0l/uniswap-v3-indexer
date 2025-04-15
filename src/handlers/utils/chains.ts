@@ -409,29 +409,5 @@ export const CHAIN_CONFIGS: { [chainId: number]: ChainConfig } = {
       name: "Ethereum",
       decimals: BigInt(18),
     },
-  },
-  [ChainId.SONEIUM]: {
-    factoryAddress: "",
-    stablecoinWrappedNativePoolId:
-      "0x3d18457ff1dcfa8ffb14b162ae3def9eda618569ac4a6aadc827628f5981b515",
-    stablecoinIsToken0: false,
-    wrappedNativeAddress: "0x0000000000000000000000000000000000000000", // Native ETH
-    minimumNativeLocked: new BigDecimal("1"),
-    stablecoinAddresses: [
-      "0xba9986d2381edf1da03b0b9c1f8b00dc4aacc369", // USDC
-    ],
-    whitelistTokens: [
-      "0x4200000000000000000000000000000000000006", // WETH
-      "0xba9986d2381edf1da03b0b9c1f8b00dc4aacc369", // USDC
-      "0x0000000000000000000000000000000000000000", // Native ETH
-    ],
-    tokenOverrides: [],
-    poolsToSkip: [],
-    poolMappings: [],
-    nativeTokenDetails: {
-      symbol: "ETH",
-      name: "Ethereum",
-      decimals: 18n,
-    },
-  },
+  }  
 };
