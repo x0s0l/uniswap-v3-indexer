@@ -8,9 +8,15 @@ importers:
 
   .:
     dependencies:
+      dotenv:
+        specifier: ^16.0.0
+        version: 16.4.5
       envio:
         specifier: 2.26.0
         version: 2.26.0(typescript@5.2.2)
+      viem:
+        specifier: ^2.0.0
+        version: 2.21.0(typescript@5.2.2)
     optionalDependencies:
       generated:
         specifier: ./generated
