@@ -1,5 +1,5 @@
 
-# Envio Uniswap V3 Indexer
+# Uniswap V3 Indexer
 
 All the entities in this indexer that use valid evm addresses as their IDs are in lowercase to avoid confusion. They are also prefixed with the chain ID in the form `<chain id>-<address>` to avoid possible id clashes, as this is a multi-chain indexer.
 
